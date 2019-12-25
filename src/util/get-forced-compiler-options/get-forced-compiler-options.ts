@@ -1,6 +1,5 @@
-import {CompilerOptions, ModuleKind, ModuleResolutionKind, ScriptTarget} from "typescript";
+import {CompilerOptions, ModuleKind, ModuleResolutionKind} from "typescript";
 import {IGetForcedCompilerOptionsOptions} from "./i-get-forced-compiler-options-options";
-import {getScriptTargetFromBrowserslist} from "../get-script-target-from-browserslist/get-script-target-from-browserslist";
 import {getModuleKindFromRollupFormat} from "../get-module-kind-from-rollup-format/get-module-kind-from-rollup-format";
 import {getOutDir} from "../get-out-dir/get-out-dir";
 
@@ -20,26 +19,6 @@ function getForcedModuleKindOption({rollupOutputOptions}: IGetForcedCompilerOpti
 }
 
 /**
- * Gets the ScriptTarget to force
- * @param {IGetForcedCompilerOptionsOptions} options
- * @returns {object}
- */
-function getForcedScriptTargetOption({pluginOptions, browserslist}: IGetForcedCompilerOptionsOptions): {target?: ScriptTarget} {
-	// If Babel should perform the transpilation, always target the latest ECMAScript version and let Babel take care of the rest
-	if (pluginOptions.transpiler === "babel") {
-		return {target: ScriptTarget.ESNext};
-	}
-
-	// If a Browserslist is provided, and if Typescript should perform the transpilation, decide the appropriate ECMAScript version based on the Browserslist.
-	else if (browserslist != null) {
-		return {target: getScriptTargetFromBrowserslist(browserslist)};
-	}
-
-	// Otherwise, don't force the 'target' option
-	return {};
-}
-
-/**
  * Retrieves the CompilerOptions that will be forced
  * @param {IGetForcedCompilerOptionsOptions} options
  * @returns {Partial<CompilerOptions>}
@@ -47,7 +26,6 @@ function getForcedScriptTargetOption({pluginOptions, browserslist}: IGetForcedCo
 export function getForcedCompilerOptions(options: IGetForcedCompilerOptionsOptions): Partial<CompilerOptions> {
 	return {
 		...getForcedModuleKindOption(options),
-		...getForcedScriptTargetOption(options),
 		outDir: getOutDir(options.pluginOptions.cwd, options.rollupOutputOptions),
 		baseUrl: ".",
 		// Rollup, not Typescript, is the decider of where to put files

@@ -1,4 +1,4 @@
-import {InputOptions, OutputBundle, OutputOptions, Plugin, PluginContext, RenderedChunk, SourceMap, TransformSourceDescription} from "rollup";
+import {InputOptions, OutputBundle, OutputOptions, Plugin, PluginContext, TransformSourceDescription} from "rollup";
 import {createDocumentRegistry, createLanguageService, LanguageService} from "typescript";
 import {getParsedCommandLine} from "../util/get-parsed-command-line/get-parsed-command-line";
 import {getForcedCompilerOptions} from "../util/get-forced-compiler-options/get-forced-compiler-options";
@@ -8,29 +8,19 @@ import {IEmitCache} from "../service/cache/emit-cache/i-emit-cache";
 import {EmitCache} from "../service/cache/emit-cache/emit-cache";
 import {emitDiagnosticsThroughRollup} from "../util/diagnostic/emit-diagnostics-through-rollup";
 import {getSupportedExtensions} from "../util/get-supported-extensions/get-supported-extensions";
-import {ensureRelative, getExtension, isBabelHelper, isRollupPluginMultiEntry, isTslib} from "../util/path/path-util";
+import {getExtension, isRollupPluginMultiEntry, isTslib} from "../util/path/path-util";
 import {ModuleResolutionHost} from "../service/module-resolution-host/module-resolution-host";
 import {takeBundledFilesNames} from "../util/take-bundled-filenames/take-bundled-filenames";
 import {TypescriptPluginOptions} from "./i-typescript-plugin-options";
 import {getPluginOptions} from "../util/plugin-options/get-plugin-options";
-import {IBabelConfig} from "./i-babel-options";
-import {getBabelConfig} from "../util/get-babel-config/get-babel-config";
-import {getForcedBabelOptions} from "../util/get-forced-babel-options/get-forced-babel-options";
-import {getBrowserslist} from "../util/get-browserslist/get-browserslist";
 import {IResolveCache} from "../service/cache/resolve-cache/i-resolve-cache";
 import {ResolveCache} from "../service/cache/resolve-cache/resolve-cache";
-import {REGENERATOR_RUNTIME_NAME_1, REGENERATOR_RUNTIME_NAME_2} from "../constant/constant";
-import {REGENERATOR_SOURCE} from "../lib/regenerator/regenerator";
-import {getDefaultBabelOptions} from "../util/get-default-babel-options/get-default-babel-options";
-// @ts-ignore
-import {transformAsync} from "@babel/core";
 // @ts-ignore
 import {createFilter} from "rollup-pluginutils";
 import {resolveId} from "../util/resolve-id/resolve-id";
 import {mergeTransformers} from "../util/merge-transformers/merge-transformers";
 import {ensureArray} from "../util/ensure-array/ensure-array";
 import {GetParsedCommandLineResult} from "../util/get-parsed-command-line/get-parsed-command-line-result";
-import {takeBrowserslistOrComputeBasedOnCompilerOptions} from "../util/take-browserslist-or-compute-based-on-compiler-options/take-browserslist-or-compute-based-on-compiler-options";
 import {matchAll} from "@wessberg/stringutil";
 import {Resolver} from "../util/resolve-id/resolver";
 import {getModuleDependencies, ModuleDependencyMap} from "../util/module/get-module-dependencies";
@@ -48,34 +38,14 @@ const PLUGIN_NAME = "Typescript";
  */
 export default function typescriptRollupPlugin(pluginInputOptions: Partial<TypescriptPluginOptions> = {}): Plugin {
 	const pluginOptions: TypescriptPluginOptions = getPluginOptions(pluginInputOptions);
-	const {include, exclude, tsconfig, cwd, resolveTypescriptLibFrom, browserslist} = pluginOptions;
+	const {include, exclude, tsconfig, cwd, resolveTypescriptLibFrom} = pluginOptions;
 	const transformers = pluginOptions.transformers == null ? [] : ensureArray(pluginOptions.transformers);
-	// Make sure to normalize the received Browserslist
-	const normalizedBrowserslist = getBrowserslist({browserslist, cwd, fileSystem: pluginOptions.fileSystem});
 
 	/**
 	 * The ParsedCommandLine to use with Typescript
 	 * @type {GetParsedCommandLineResult?}
 	 */
 	let parsedCommandLineResult: GetParsedCommandLineResult;
-
-	/**
-	 * The config to use with Babel, if Babel should transpile source code
-	 * @type {IBabelConfig}
-	 */
-	let babelConfig: ((filename: string) => IBabelConfig) | undefined;
-
-	/**
-	 * If babel is to be used, and if one or more minify presets/plugins has been passed, this config will be used
-	 * @type {boolean}
-	 */
-	let babelMinifyConfig: ((filename: string) => IBabelConfig) | undefined;
-
-	/**
-	 * If babel is to be used, and if one or more minify presets/plugins has been passed, this will be true
-	 * @type {boolean}
-	 */
-	let hasBabelMinifyOptions: boolean = false;
 
 	/**
 	 * The (Incremental) LanguageServiceHost to use
@@ -189,30 +159,9 @@ export default function typescriptRollupPlugin(pluginInputOptions: Partial<Types
 			parsedCommandLineResult = getParsedCommandLine({
 				tsconfig,
 				cwd,
-				forcedCompilerOptions: getForcedCompilerOptions({pluginOptions, rollupInputOptions, browserslist: normalizedBrowserslist}),
+				forcedCompilerOptions: getForcedCompilerOptions({pluginOptions, rollupInputOptions}),
 				fileSystem: pluginOptions.fileSystem
 			});
-
-			// Prepare a Babel config if Babel should be the transpiler
-			if (pluginOptions.transpiler === "babel") {
-				// A browserslist may already be provided, but if that is not the case, one can be computed based on the "target" from the tsconfig
-				const computedBrowserslist = takeBrowserslistOrComputeBasedOnCompilerOptions(
-					normalizedBrowserslist,
-					parsedCommandLineResult.originalCompilerOptions
-				);
-
-				const babelConfigResult = getBabelConfig({
-					cwd,
-					babelConfig: pluginOptions.babelConfig,
-					forcedOptions: getForcedBabelOptions({cwd, pluginOptions, rollupInputOptions, browserslist: computedBrowserslist}),
-					defaultOptions: getDefaultBabelOptions({pluginOptions, rollupInputOptions, browserslist: computedBrowserslist}),
-					browserslist: computedBrowserslist,
-					rollupInputOptions
-				});
-				babelConfig = babelConfigResult.config;
-				babelMinifyConfig = babelConfigResult.minifyConfig;
-				hasBabelMinifyOptions = babelConfigResult.hasMinifyOptions;
-			}
 
 			SUPPORTED_EXTENSIONS = getSupportedExtensions(
 				Boolean(parsedCommandLineResult.parsedCommandLine.options.allowJs),
@@ -268,31 +217,6 @@ export default function typescriptRollupPlugin(pluginInputOptions: Partial<Types
 		},
 
 		/**
-		 * Renders the given chunk. Will emit declaration files if the Typescript config says so.
-		 * Will also apply any minification via Babel if a minification plugin or preset has been provided,
-		 * and if Babel is the chosen transpiler. Otherwise, it will simply do nothing
-		 * @param {string} code
-		 * @param {RenderedChunk} chunk
-		 * @returns {Promise<{ code: string, map: SourceMap } | null>}
-		 */
-		async renderChunk(this: PluginContext, code: string, chunk: RenderedChunk): Promise<{code: string; map: SourceMap} | null> {
-			// Don't proceed if there is no minification config
-			if (!hasBabelMinifyOptions || babelMinifyConfig == null) return null;
-
-			const transpilationResult = await transformAsync(code, {
-				...babelMinifyConfig(chunk.fileName),
-				filename: chunk.fileName,
-				filenameRelative: ensureRelative(cwd, chunk.fileName)
-			});
-
-			// Return the results
-			return {
-				code: transpilationResult.code,
-				map: transpilationResult.map == null ? undefined : transpilationResult.map
-			};
-		},
-
-		/**
 		 * Transforms the given code and file
 		 * @param {string} code
 		 * @param {string} file
@@ -307,68 +231,47 @@ export default function typescriptRollupPlugin(pluginInputOptions: Partial<Types
 			}
 
 			// Skip the file if it doesn't match the filter or if the helper cannot be transformed
-			if (!filter(file) || isBabelHelper(file)) {
+			if (!filter(file)) {
 				return undefined;
 			}
 
-			// Only pass the file through Typescript if it's extension is supported. Otherwise, if we're going to continue on with Babel,
-			// Mock a SourceDescription. Otherwise, return bind undefined
-			let sourceDescription = !canEmitForFile(file)
-				? babelConfig != null
-					? {code, map: undefined}
-					: undefined
-				: (() => {
-						if (transformedFiles.has(file)) {
-							// Remove the file from the resolve cache, now that it has changed.
-							resolveCache.delete(file);
-							moduleDependencyCache.delete(file);
-						}
+			// Only pass the file through Typescript if it's extension is supported.
+			// Otherwise, return bind undefined
+			let sourceDescription;
+			if (canEmitForFile(file)) {
+				if (transformedFiles.has(file)) {
+					// Remove the file from the resolve cache, now that it has changed.
+					resolveCache.delete(file);
+					moduleDependencyCache.delete(file);
+				}
 
-						// Add the file to the LanguageServiceHost
-						languageServiceHost.addFile({file, code});
-						moduleDependencyMap.set(
-							file,
-							getModuleDependencies({
-								resolver: ambientResolver,
-								languageServiceHost,
-								file,
-								supportedExtensions: SUPPORTED_EXTENSIONS,
-								cache: moduleDependencyCache
-							})
-						);
+				// Add the file to the LanguageServiceHost
+				languageServiceHost.addFile({file, code});
+				moduleDependencyMap.set(
+					file,
+					getModuleDependencies({
+						resolver: ambientResolver,
+						languageServiceHost,
+						file,
+						supportedExtensions: SUPPORTED_EXTENSIONS,
+						cache: moduleDependencyCache
+					})
+				);
 
-						// Get some EmitOutput, optionally from the cache if the file contents are unchanged
-						const emitOutput = emitCache.get({fileName: file, languageService});
+				// Get some EmitOutput, optionally from the cache if the file contents are unchanged
+				const emitOutput = emitCache.get({fileName: file, languageService});
 
-						// Return the emit output results to Rollup
-						return getSourceDescriptionFromEmitOutput(emitOutput);
-				  })();
+				// Return the emit output results to Rollup
+				sourceDescription = getSourceDescriptionFromEmitOutput(emitOutput);
+			}
 
 			// If nothing was emitted, simply return undefined
 			if (sourceDescription == null) {
 				return undefined;
 			} else {
 				transformedFiles.add(file);
-				// If Babel shouldn't be used, simply return the emitted results
-				if (babelConfig == null) {
-					return sourceDescription;
-				}
-
-				// Otherwise, pass it on to Babel to perform the rest of the transpilation steps
-				else {
-					const transpilationResult = await transformAsync(sourceDescription.code, {
-						...babelConfig(file),
-						filename: file,
-						filenameRelative: ensureRelative(cwd, file),
-						inputSourceMap: typeof sourceDescription.map === "string" ? JSON.parse(sourceDescription.map) : sourceDescription.map
-					});
-
-					// Return the results
-					return {
-						code: transpilationResult.code,
-						map: transpilationResult.map == null ? undefined : transpilationResult.map
-					};
-				}
+				// Simply return the emitted results
+				return sourceDescription;
 			}
 		},
 
@@ -390,31 +293,8 @@ export default function typescriptRollupPlugin(pluginInputOptions: Partial<Types
 				}
 			}
 
-			// Handle Babel helpers differently
-			else if (isBabelHelper(id)) {
-				const babelHelperPath = resolveCache.findHelperFromNodeModules(id, cwd);
-				if (babelHelperPath != null) {
-					return babelHelperPath;
-				}
-			}
-
 			const resolveResult = resolver(id, parent);
 			return resolveResult == null ? null : resolveResult;
-		},
-
-		/**
-		 * Optionally loads the given id. Is used to swap out the regenerator-runtime implementation used by babel
-		 * to use one that is using ESM by default to play nice with Rollup even when rollup-plugin-commonjs isn't
-		 * being used
-		 * @param {string} id
-		 * @returns {string | null}
-		 */
-		load(this: PluginContext, id: string): string | null {
-			// Return the alternative source for the regenerator runtime if that file is attempted to be loaded
-			if (id.endsWith(REGENERATOR_RUNTIME_NAME_1) || id.endsWith(REGENERATOR_RUNTIME_NAME_2)) {
-				return REGENERATOR_SOURCE;
-			}
-			return null;
 		},
 
 		/**

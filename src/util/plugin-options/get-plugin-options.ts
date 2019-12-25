@@ -9,8 +9,6 @@ import {REAL_FILE_SYSTEM} from "../file-system/file-system";
 export function getPluginOptions(options: Partial<TypescriptPluginOptions>): TypescriptPluginOptions {
 	// Destructure the options and provide defaults
 	const {
-		browserslist,
-		transpiler = "typescript",
 		cwd = process.cwd(),
 		resolveTypescriptLibFrom = cwd,
 		tsconfig,
@@ -24,8 +22,7 @@ export function getPluginOptions(options: Partial<TypescriptPluginOptions>): Typ
 	} = options;
 
 	// These options will be used no matter what
-	const baseOptions = {
-		browserslist,
+	return {
 		cwd,
 		resolveTypescriptLibFrom,
 		exclude,
@@ -37,18 +34,4 @@ export function getPluginOptions(options: Partial<TypescriptPluginOptions>): Typ
 		fileSystem,
 		hook
 	};
-
-	// If we're to use Typescript, return the Typescript-options
-	if (transpiler === "typescript") {
-		return {
-			...baseOptions,
-			transpiler: "typescript"
-		};
-	} else {
-		return {
-			...baseOptions,
-			...("babelConfig" in options ? {babelConfig: options.babelConfig} : {}),
-			transpiler: "babel"
-		};
-	}
 }

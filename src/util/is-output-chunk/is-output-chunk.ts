@@ -6,5 +6,5 @@ import {OutputChunk, OutputAsset} from "rollup";
  * @return {thing is OutputChunk}
  */
 export function isOutputChunk(thing: OutputChunk | OutputAsset): thing is OutputChunk {
-	return !("isAsset" in thing);
+	return thing.type === "chunk";
 }
