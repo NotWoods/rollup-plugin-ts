@@ -11,7 +11,7 @@ export function emitDiagnosticsThroughRollup({languageService, languageServiceHo
 	const program = languageService.getProgram();
 	if (program == null) return;
 
-	let diagnostics: readonly Diagnostic[] | undefined = [...getPreEmitDiagnostics(program), ...languageServiceHost.getTransformerDiagnostics()];
+	let diagnostics: readonly Diagnostic[] | undefined = getPreEmitDiagnostics(program);
 
 	// If there is a hook for diagnostics, call it assign the result of calling it to the local variable 'diagnostics'
 	if (pluginOptions.hook.diagnostics != null) {

@@ -234,7 +234,7 @@ export default function typescriptRollupPlugin(pluginInputOptions: Partial<Types
 				}
 
 				// Add the file to the LanguageServiceHost
-				languageServiceHost.addFile({file, code});
+				languageServiceHost.addFile(file, code);
 				moduleDependencyMap.set(
 					file,
 					getModuleDependencies({

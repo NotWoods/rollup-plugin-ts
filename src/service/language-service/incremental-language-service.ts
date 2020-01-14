@@ -13,13 +13,19 @@ import {
 import {join, dirname} from "path";
 import {getNewLineCharacter} from "../../util/get-new-line-character/get-new-line-character";
 import {ILanguageServiceOptions} from "./i-language-service-options";
-import {IFile, IFileInput} from "./i-file";
 import {getScriptKindFromPath} from "../../util/get-script-kind-from-path/get-script-kind-from-path";
 import {DEFAULT_LIB_NAMES} from "../../constant/constant";
 import {ensureAbsolute, isInternalFile} from "../../util/path/path-util";
-import {IExtendedDiagnostic} from "../../diagnostic/i-extended-diagnostic";
 import {resolveId} from "../../util/resolve-id/resolve-id";
 import {FileSystem} from "../../util/file-system/file-system";
+
+interface IFile {
+	file: string;
+	code: string;
+	scriptKind: ScriptKind;
+	snapshot: IScriptSnapshot;
+	version: number;
+}
 
 /**
  * An implementation of a LanguageService for Typescript
@@ -68,49 +74,29 @@ export class IncrementalLanguageService implements LanguageServiceHost, Compiler
 	}
 
 	/**
-	 * Gets all diagnostics reported of transformers for the given filename
-	 */
-	public getTransformerDiagnostics(fileName?: string): ReadonlyArray<IExtendedDiagnostic> {
-		// If diagnostics for only a specific file should be retrieved, try to get it from the files map and return its transformer diagnostics
-		if (fileName != null) {
-			const fileMatch = this.files.get(fileName);
-			if (fileMatch == null) return [];
-			return fileMatch.transformerDiagnostics;
-		}
-
-		// Otherwise, take all transformer diagnostics for all files
-		else {
-			return ([] as IExtendedDiagnostic[]).concat.apply(
-				[],
-				[...this.files.values()].map(v => v.transformerDiagnostics)
-			);
-		}
-	}
-
-	/**
 	 * Adds a File to the CompilerHost
 	 */
-	public addFile(file: IFileInput, internal: boolean = false): void {
-		const existing = this.files.get(file.file);
+	public addFile(file: string, code: string, internal: boolean = false): void {
+		const existing = this.files.get(file);
 
 		// Don't proceed if the file contents are completely unchanged
-		if (existing != null && existing.code === file.code) return;
+		if (existing?.code === code) return;
 
-		this.files.set(file.file, {
-			...file,
-			scriptKind: getScriptKindFromPath(file.file),
-			snapshot: ScriptSnapshot.fromString(file.code),
-			version: existing != null ? existing.version + 1 : 0,
-			transformerDiagnostics: []
+		this.files.set(file, {
+			file,
+			code,
+			scriptKind: getScriptKindFromPath(file),
+			snapshot: ScriptSnapshot.fromString(code),
+			version: existing != null ? existing.version + 1 : 0
 		});
 
 		if (!internal) {
 			// Add the file to the Set of files that has been added manually by the user
-			this.publicFiles.add(file.file);
+			this.publicFiles.add(file);
 		}
 
 		// Remove the file from the emit cache
-		this.options.emitCache.delete(file.file);
+		this.options.emitCache.delete(file);
 	}
 
 	/**
@@ -244,7 +230,7 @@ export class IncrementalLanguageService implements LanguageServiceHost, Compiler
 	 * Gets the Script version for the given file name
 	 */
 	public getScriptVersion(fileName: string): string {
-		return String(this.assertHasFileName(fileName).version);
+		return this.assertHasFileName(fileName).version.toString();
 	}
 
 	/**
@@ -278,7 +264,7 @@ export class IncrementalLanguageService implements LanguageServiceHost, Compiler
 			const code = this.options.fileSystem.readFile(path);
 			if (code == null) return;
 
-			this.addFile({file: libName, code}, true);
+			this.addFile(libName, code, true);
 		});
 	}
 
@@ -289,13 +275,7 @@ export class IncrementalLanguageService implements LanguageServiceHost, Compiler
 		this.options.parsedCommandLine.fileNames.forEach(file => {
 			const code = this.options.fileSystem.readFile(ensureAbsolute(this.options.cwd, file));
 			if (code != null) {
-				this.addFile(
-					{
-						file: file,
-						code
-					},
-					true
-				);
+				this.addFile(file, code, true);
 			}
 		});
 	}
@@ -310,7 +290,7 @@ export class IncrementalLanguageService implements LanguageServiceHost, Compiler
 			// If the file exists on disk, add it
 			const code = this.options.fileSystem.readFile(absoluteFileName);
 			if (code != null) {
-				this.addFile({file: absoluteFileName, code}, isInternalFile(absoluteFileName));
+				this.addFile(absoluteFileName, code, isInternalFile(absoluteFileName));
 				return this.files.get(absoluteFileName)!;
 			} else {
 				throw new ReferenceError(`The given file: '${absoluteFileName}' doesn't exist!`);

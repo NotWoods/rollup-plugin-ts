@@ -50,7 +50,7 @@ export function getModuleDependencies(
 			localDependencies.add(dependency);
 
 			if (supportedExtensions.has(extname(dependency))) {
-				languageServiceHost.addFile({file: dependency, code});
+				languageServiceHost.addFile(dependency, code);
 			}
 		}
 	};
