@@ -21,7 +21,7 @@ import {ModuleDependencyMap} from "../util/module/get-module-dependencies";
 import {ensurePosix, setExtension} from "../util/path/path-util";
 import {DECLARATION_EXTENSION, DECLARATION_MAP_EXTENSION, ROLLUP_PLUGIN_MULTI_ENTRY} from "../constant/constant";
 import {TypescriptPluginOptions} from "../plugin/i-typescript-plugin-options";
-import {Resolver} from "../util/resolve-id/resolver";
+import {Resolver} from "../util/resolve-id/resolve-id";
 import {SupportedExtensions} from "../util/get-supported-extensions/get-supported-extensions";
 import {preBundleDeclarationsForChunk, PreBundleDeclarationsForChunkOptions} from "./pre-bundle-declarations-for-chunk";
 import {IncrementalLanguageService} from "../service/language-service/incremental-language-service";
@@ -96,20 +96,9 @@ export function emitDeclarations(options: EmitDeclarationsOptions) {
 			const absoluteDeclarationMapDirname = join(absoluteDeclarationOutDir, dirname(declarationMapFilename));
 
 			// We'll need to work with POSIX paths for now
-			let emitFileDeclarationFilename = ensurePosix(join(relative(relativeOutDir, relativeDeclarationOutDir), declarationFilename));
-			let emitFileDeclarationMapFilename = ensurePosix(join(relative(relativeOutDir, relativeDeclarationOutDir), declarationMapFilename));
-
-			// Rollup does not allow emitting files outside of the root of the whatever 'dist' directory that has been provided.
-			while (emitFileDeclarationFilename.startsWith("../") || emitFileDeclarationFilename.startsWith("..\\")) {
-				emitFileDeclarationFilename = emitFileDeclarationFilename.slice("../".length);
-			}
-			while (emitFileDeclarationMapFilename.startsWith("../") || emitFileDeclarationMapFilename.startsWith("..\\")) {
-				emitFileDeclarationMapFilename = emitFileDeclarationMapFilename.slice("../".length);
-			}
-
-			// Now, make sure to normalize the file names again
-			emitFileDeclarationFilename = normalize(emitFileDeclarationFilename);
-			emitFileDeclarationMapFilename = normalize(emitFileDeclarationMapFilename);
+			const declarationDir = relative(relativeOutDir, relativeDeclarationOutDir);
+			let emitFileDeclarationFilename = getEmitFileDeclarationName(declarationDir, declarationFilename);
+			let emitFileDeclarationMapFilename = getEmitFileDeclarationName(declarationDir, declarationMapFilename);
 
 			const rawLocalModuleNames = chunk.modules;
 			const localModuleNames = rawLocalModuleNames.filter(options.canEmitForFile);
@@ -195,4 +184,18 @@ export function emitDeclarations(options: EmitDeclarationsOptions) {
 			}
 		}
 	}
+}
+
+function getEmitFileDeclarationName(dir: string, declarationFilename: string) {
+	// We'll need to work with POSIX paths for now
+	let emitFileDeclarationFilename = ensurePosix(join(dir, declarationFilename));
+
+	// Rollup does not allow emitting files outside of the root of the whatever 'dist' directory that has been provided.
+	while (emitFileDeclarationFilename.startsWith("../") || emitFileDeclarationFilename.startsWith("..\\")) {
+		emitFileDeclarationFilename = emitFileDeclarationFilename.slice("../".length);
+	}
+
+	// Now, make sure to normalize the file names again
+	emitFileDeclarationFilename = normalize(emitFileDeclarationFilename);
+	return emitFileDeclarationFilename;
 }

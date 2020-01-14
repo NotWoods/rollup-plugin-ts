@@ -1,4 +1,4 @@
-import {Resolver} from "../../../util/resolve-id/resolver";
+import {Resolver} from "../../../util/resolve-id/resolve-id";
 import {Printer} from "typescript";
 import {TypescriptPluginOptions} from "../../../plugin/i-typescript-plugin-options";
 import {ReferenceCache, SourceFileToNodeToReferencedIdentifiersCache} from "../declaration-bundler/reference/cache/reference-cache";

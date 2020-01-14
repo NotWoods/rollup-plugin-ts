@@ -1,6 +1,6 @@
 import {Node, SourceFile} from "typescript";
 import {LocalSymbol} from "../declaration-pre-bundler-options";
-import {Resolver} from "../../../../util/resolve-id/resolver";
+import {Resolver} from "../../../../util/resolve-id/resolve-id";
 
 export interface TraceIdentifiersVisitorOptions<T extends Node = Node> {
 	node: T;

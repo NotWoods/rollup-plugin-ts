@@ -3,10 +3,8 @@ import {ModuleKind} from "typescript";
 
 /**
  * Gets a proper ModuleKind for Typescript based on the format given from the Rollup options
- * @param {ModuleFormat} format
- * @returns {ModuleKind}
  */
-export function getModuleKindFromRollupFormat(format: ModuleFormat): ModuleKind {
+export function getModuleKindFromRollupFormat(format: ModuleFormat | undefined): ModuleKind {
 	switch (format) {
 		case "amd":
 			return ModuleKind.AMD;
@@ -15,13 +13,14 @@ export function getModuleKindFromRollupFormat(format: ModuleFormat): ModuleKind 
 			return ModuleKind.CommonJS;
 		case "system":
 			return ModuleKind.System;
-		case "es":
-		case "esm":
-		case "module":
-			return ModuleKind.ESNext;
 		case "umd":
 			return ModuleKind.UMD;
 		case "iife":
 			return ModuleKind.None;
+		case "es":
+		case "esm":
+		case "module":
+		default:
+			return ModuleKind.ESNext;
 	}
 }

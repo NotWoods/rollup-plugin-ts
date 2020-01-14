@@ -1,21 +1,24 @@
 import {CompilerOptions, ModuleKind, ModuleResolutionKind} from "typescript";
-import {IGetForcedCompilerOptionsOptions} from "./i-get-forced-compiler-options-options";
+import {InputOptions, OutputOptions} from "rollup";
+import {TypescriptPluginOptions} from "../../plugin/i-typescript-plugin-options";
 import {getModuleKindFromRollupFormat} from "../get-module-kind-from-rollup-format/get-module-kind-from-rollup-format";
 import {getOutDir} from "../get-out-dir/get-out-dir";
+
+interface IGetForcedCompilerOptionsOptions {
+	pluginOptions: TypescriptPluginOptions;
+	rollupInputOptions: InputOptions;
+	rollupOutputOptions?: OutputOptions;
+}
 
 /**
  * Gets the ModuleKind to force
  * @param {IGetForcedCompilerOptionsOptions} options
  * @returns {object}
  */
-function getForcedModuleKindOption({rollupOutputOptions}: IGetForcedCompilerOptionsOptions): {module: ModuleKind} {
+function getForcedModuleKindOption({rollupOutputOptions}: IGetForcedCompilerOptionsOptions): ModuleKind {
 	// If no OutputOptions is given, or if no format is given in the OutputOptions, use ESNext. Otherwise, convert the
 	// Rollup option into one that Typescript can understand
-	if (rollupOutputOptions == null || rollupOutputOptions.format == null) {
-		return {module: ModuleKind.ESNext};
-	}
-
-	return {module: getModuleKindFromRollupFormat(rollupOutputOptions.format)};
+	return getModuleKindFromRollupFormat(rollupOutputOptions?.format);
 }
 
 /**
@@ -25,7 +28,7 @@ function getForcedModuleKindOption({rollupOutputOptions}: IGetForcedCompilerOpti
  */
 export function getForcedCompilerOptions(options: IGetForcedCompilerOptionsOptions): Partial<CompilerOptions> {
 	return {
-		...getForcedModuleKindOption(options),
+		module: getForcedModuleKindOption(options),
 		outDir: getOutDir(options.pluginOptions.cwd, options.rollupOutputOptions),
 		baseUrl: ".",
 		// Rollup, not Typescript, is the decider of where to put files

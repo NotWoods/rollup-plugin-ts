@@ -1,6 +1,10 @@
-import {ModuleResolutionHost as TSModuleResolutionHost} from "typescript";
+import {ModuleResolutionHost as TSModuleResolutionHost, LanguageServiceHost} from "typescript";
 import {getExtension} from "../../util/path/path-util";
-import {IModuleResolutionHostOptions} from "./i-module-resolution-host-options";
+
+interface IModuleResolutionHostOptions {
+	languageServiceHost: Required<Pick<LanguageServiceHost, "fileExists" | "readFile">>;
+	extensions: Set<string>;
+}
 
 /**
  * A ModuleResolutionHost can resolve files
@@ -10,8 +14,6 @@ export class ModuleResolutionHost implements TSModuleResolutionHost {
 
 	/**
 	 * Returns true if the given file exists
-	 * @param {string} fileName
-	 * @returns {boolean}
 	 */
 	public fileExists(fileName: string): boolean {
 		return this.options.extensions.has(getExtension(fileName)) && this.options.languageServiceHost.fileExists(fileName);
@@ -19,9 +21,6 @@ export class ModuleResolutionHost implements TSModuleResolutionHost {
 
 	/**
 	 * Reads the given file
-	 * @param {string} fileName
-	 * @param {string} [encoding]
-	 * @returns {string | undefined}
 	 */
 	public readFile(fileName: string, encoding?: string): string | undefined {
 		return this.options.languageServiceHost.readFile(fileName, encoding);

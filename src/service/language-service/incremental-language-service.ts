@@ -8,16 +8,22 @@ import {
 	ScriptKind,
 	ScriptSnapshot,
 	SourceFile,
-	getDefaultLibFilePath
+	getDefaultLibFilePath,
+	LanguageService,
+	ParsedCommandLine
 } from "typescript";
+import {InputOptions} from "rollup";
 import {join, dirname} from "path";
 import {getNewLineCharacter} from "../../util/get-new-line-character/get-new-line-character";
-import {ILanguageServiceOptions} from "./i-language-service-options";
 import {getScriptKindFromPath} from "../../util/get-script-kind-from-path/get-script-kind-from-path";
 import {DEFAULT_LIB_NAMES} from "../../constant/constant";
 import {ensureAbsolute, isInternalFile} from "../../util/path/path-util";
 import {resolveId} from "../../util/resolve-id/resolve-id";
 import {FileSystem} from "../../util/file-system/file-system";
+import {EmitCache} from "../cache/emit-cache/emit-cache";
+import {TypescriptPluginOptions} from "../../plugin/i-typescript-plugin-options";
+import {ResolveCache} from "../cache/resolve-cache/resolve-cache";
+import {SupportedExtensions} from "../../util/get-supported-extensions/get-supported-extensions";
 
 interface IFile {
 	file: string;
@@ -25,6 +31,18 @@ interface IFile {
 	scriptKind: ScriptKind;
 	snapshot: IScriptSnapshot;
 	version: number;
+}
+
+interface ILanguageServiceOptions {
+	parsedCommandLine: ParsedCommandLine;
+	cwd: TypescriptPluginOptions["cwd"];
+	resolveTypescriptLibFrom: TypescriptPluginOptions["resolveTypescriptLibFrom"];
+	emitCache: EmitCache;
+	resolveCache: ResolveCache;
+	rollupInputOptions: InputOptions;
+	supportedExtensions: SupportedExtensions;
+	languageService(): LanguageService;
+	fileSystem: FileSystem;
 }
 
 /**

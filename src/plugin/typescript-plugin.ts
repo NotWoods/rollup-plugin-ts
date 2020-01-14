@@ -1,6 +1,6 @@
 import {InputOptions, OutputBundle, OutputOptions, Plugin, PluginContext, TransformSourceDescription} from "rollup";
 import {createDocumentRegistry, createLanguageService, LanguageService} from "typescript";
-import {getParsedCommandLine} from "../util/get-parsed-command-line/get-parsed-command-line";
+import {getParsedCommandLine, GetParsedCommandLineResult} from "../util/get-parsed-command-line/get-parsed-command-line";
 import {getForcedCompilerOptions} from "../util/get-forced-compiler-options/get-forced-compiler-options";
 import {IncrementalLanguageService} from "../service/language-service/incremental-language-service";
 import {getSourceDescriptionFromEmitOutput} from "../util/get-source-description-from-emit-output/get-source-description-from-emit-output";
@@ -15,10 +15,8 @@ import {getPluginOptions} from "../util/plugin-options/get-plugin-options";
 import {ResolveCache} from "../service/cache/resolve-cache/resolve-cache";
 // @ts-ignore
 import {createFilter} from "rollup-pluginutils";
-import {resolveId} from "../util/resolve-id/resolve-id";
-import {GetParsedCommandLineResult} from "../util/get-parsed-command-line/get-parsed-command-line-result";
+import {resolveId, Resolver} from "../util/resolve-id/resolve-id";
 import {matchAll} from "@wessberg/stringutil";
-import {Resolver} from "../util/resolve-id/resolver";
 import {getModuleDependencies, ModuleDependencyMap} from "../util/module/get-module-dependencies";
 import {emitDeclarations} from "../declaration/emit-declarations";
 
@@ -296,7 +294,7 @@ export default function typescriptRollupPlugin(pluginInputOptions: Partial<Types
 			// Only emit diagnostics if the plugin options allow it
 			if (!Boolean(pluginOptions.transpileOnly)) {
 				// Emit all reported diagnostics
-				emitDiagnosticsThroughRollup({languageServiceHost, languageService, pluginOptions, context: this});
+				emitDiagnosticsThroughRollup({languageServiceHost, languageService, context: this});
 			}
 
 			// Emit declaration files if required

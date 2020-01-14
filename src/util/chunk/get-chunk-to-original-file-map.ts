@@ -4,9 +4,5 @@ import {join} from "path";
 export type ChunkToOriginalFileMap = Map<string, string[]>;
 
 export function getChunkToOriginalFileMap(outDir: string, {mergedChunks}: MergeChunksWithAmbientDependenciesResult): ChunkToOriginalFileMap {
-	return new Map(
-		mergedChunks.map(chunk => {
-			return [join(outDir, chunk.fileName), chunk.modules];
-		})
-	);
+	return new Map(mergedChunks.map(chunk => [join(outDir, chunk.fileName), chunk.modules]));
 }

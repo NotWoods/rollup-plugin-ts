@@ -1,4 +1,4 @@
-import {Resolver} from "../resolve-id/resolver";
+import {Resolver} from "../resolve-id/resolve-id";
 import {IncrementalLanguageService} from "../../service/language-service/incremental-language-service";
 import {
 	CallExpression,

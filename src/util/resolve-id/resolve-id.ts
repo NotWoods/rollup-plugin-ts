@@ -5,6 +5,8 @@ interface IResolveModuleOptions extends IGetResolvedIdWithCachingOptions {
 	resolveCache: ResolveCache;
 }
 
+export type Resolver = (id: string, parent: string) => string | undefined;
+
 /**
  * Resolves an id from the given parent
  * @param {IResolveModuleOptions} opts

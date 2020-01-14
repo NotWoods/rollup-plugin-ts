@@ -1,5 +1,5 @@
 import {forEachChild, Node, SourceFile} from "typescript";
-import {Resolver} from "../../../../util/resolve-id/resolver";
+import {Resolver} from "../../../../util/resolve-id/resolve-id";
 import {LocalSymbol, LocalSymbolMap} from "../../declaration-pre-bundler/declaration-pre-bundler-options";
 import {traceIdentifiers} from "../../declaration-pre-bundler/deconflicter/visitor/trace-identifiers/trace-identifiers";
 

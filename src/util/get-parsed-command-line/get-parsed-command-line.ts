@@ -1,16 +1,30 @@
 import {CompilerOptions, parseConfigFileTextToJson, ParsedCommandLine, parseJsonConfigFileContent} from "typescript";
-import {IGetParsedCommandLineOptions} from "./i-get-parsed-command-line-options";
 import {ensureAbsolute} from "../path/path-util";
 import {DECLARATION_EXTENSION} from "../../constant/constant";
-import {GetParsedCommandLineResult} from "./get-parsed-command-line-result";
-import {InputCompilerOptions, TsConfigResolver, TsConfigResolverWithFileName} from "../../plugin/i-typescript-plugin-options";
+import {
+	TypescriptPluginOptions,
+	InputCompilerOptions,
+	TsConfigResolver,
+	TsConfigResolverWithFileName
+} from "../../plugin/i-typescript-plugin-options";
+import {FileSystem} from "../file-system/file-system";
+
+interface IGetParsedCommandLineOptions {
+	cwd: string;
+	tsconfig?: TypescriptPluginOptions["tsconfig"];
+	forcedCompilerOptions?: CompilerOptions;
+	fileSystem: FileSystem;
+}
+
+export interface GetParsedCommandLineResult {
+	parsedCommandLine: ParsedCommandLine;
+	originalCompilerOptions: CompilerOptions;
+}
 
 /**
  * Returns true if the given tsconfig is a ParsedCommandLine
- * @param {IGetParsedCommandLineOptions["tsconfig"]} tsconfig
- * @returns {tsconfig is ParsedCommandLine}
  */
-export function isParsedCommandLine(tsconfig?: IGetParsedCommandLineOptions["tsconfig"]): tsconfig is ParsedCommandLine {
+function isParsedCommandLine(tsconfig?: IGetParsedCommandLineOptions["tsconfig"]): tsconfig is ParsedCommandLine {
 	return tsconfig != null && typeof tsconfig !== "string" && typeof tsconfig !== "function" && "options" in tsconfig && !("hook" in tsconfig);
 }
 
@@ -19,26 +33,22 @@ export function isParsedCommandLine(tsconfig?: IGetParsedCommandLineOptions["tsc
  * @param {IGetParsedCommandLineOptions["tsconfig"]} tsconfig
  * @returns {tsconfig is Partial<Record<keyof CompilerOptions, string | number | boolean>>}
  */
-export function isRawCompilerOptions(tsconfig?: IGetParsedCommandLineOptions["tsconfig"]): tsconfig is Partial<InputCompilerOptions> {
+function isRawCompilerOptions(tsconfig?: IGetParsedCommandLineOptions["tsconfig"]): tsconfig is Partial<InputCompilerOptions> {
 	return tsconfig != null && typeof tsconfig !== "string" && typeof tsconfig !== "function" && !("options" in tsconfig) && !("hook" in tsconfig);
 }
 
 /**
  * Returns true if the given tsconfig is in fact a function that receives resolved CompilerOptions that can be extended
- * @param {IGetParsedCommandLineOptions["tsconfig"]} tsconfig
- * @returns {tsconfig is TsConfigResolver}
  */
-export function isTsConfigResolver(tsconfig?: IGetParsedCommandLineOptions["tsconfig"]): tsconfig is TsConfigResolver {
+function isTsConfigResolver(tsconfig?: IGetParsedCommandLineOptions["tsconfig"]): tsconfig is TsConfigResolver {
 	return tsconfig != null && typeof tsconfig === "function";
 }
 
 /**
  * Returns true if the given tsconfig is in fact an object that provides a filename for a tsconfig,
  * as well as a 'hook' function that receives resolved CompilerOptions that can be extended
- * @param {IGetParsedCommandLineOptions["tsconfig"]} tsconfig
- * @returns {tsconfig is TsConfigResolverWithFileName}
  */
-export function isTsConfigResolverWithFileName(tsconfig?: IGetParsedCommandLineOptions["tsconfig"]): tsconfig is TsConfigResolverWithFileName {
+function isTsConfigResolverWithFileName(tsconfig?: IGetParsedCommandLineOptions["tsconfig"]): tsconfig is TsConfigResolverWithFileName {
 	return tsconfig != null && typeof tsconfig !== "string" && typeof tsconfig !== "function" && !("options" in tsconfig) && "hook" in tsconfig;
 }
 
@@ -47,7 +57,7 @@ export function isTsConfigResolverWithFileName(tsconfig?: IGetParsedCommandLineO
  * @param {IGetParsedCommandLineOptions["tsconfig"]} tsconfig
  * @returns {tsconfig is CompilerOptions}
  */
-export function isCompilerOptions(tsconfig?: IGetParsedCommandLineOptions["tsconfig"]): tsconfig is Partial<CompilerOptions> {
+function isCompilerOptions(tsconfig?: IGetParsedCommandLineOptions["tsconfig"]): tsconfig is Partial<CompilerOptions> {
 	return (
 		tsconfig != null &&
 		typeof tsconfig !== "string" &&
