@@ -60,11 +60,6 @@ export function treeShaker({declarationFilename, ...options}: DeclarationBundler
 			// If the SourceFile is not part of the local module names, remove all statements from it and return immediately
 			if (sourceFileName !== normalize(declarationFilename)) return updateSourceFileNode(sourceFile, [], true);
 
-			if (options.pluginOptions.debug) {
-				console.log(`=== BEFORE TREE-SHAKING === (${sourceFileName})`);
-				console.log(options.printer.printFile(sourceFile));
-			}
-
 			// Prepare some VisitorOptions
 			const visitorOptions = {
 				...options,
@@ -129,11 +124,6 @@ export function treeShaker({declarationFilename, ...options}: DeclarationBundler
 			}
 
 			const updatedSourceFile = visitEachChild(sourceFile, visitor, context);
-
-			if (options.pluginOptions.debug) {
-				console.log(`=== AFTER TREE-SHAKING === (${sourceFileName})`);
-				console.log(options.printer.printFile(updatedSourceFile));
-			}
 
 			return updatedSourceFile;
 		};

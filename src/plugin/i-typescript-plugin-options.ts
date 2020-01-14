@@ -33,5 +33,4 @@ export interface TypescriptPluginOptions {
 	exclude: string[] | string;
 	transpileOnly?: boolean;
 	fileSystem: FileSystem;
-	debug: boolean;
 }

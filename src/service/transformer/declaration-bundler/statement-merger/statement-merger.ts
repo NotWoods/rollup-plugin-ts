@@ -15,11 +15,6 @@ export function statementMerger({declarationFilename, ...options}: DeclarationBu
 			// If the SourceFile is not part of the local module names, remove all statements from it and return immediately
 			if (sourceFileName !== normalize(declarationFilename)) return updateSourceFileNode(sourceFile, [], true);
 
-			if (options.pluginOptions.debug) {
-				console.log(`=== BEFORE STATEMENT MERGING === (${sourceFileName})`);
-				console.log(options.printer.printFile(sourceFile));
-			}
-
 			const mergedStatements = mergeExports(mergeImports([...sourceFile.statements]));
 
 			const result = updateSourceFileNode(
@@ -34,11 +29,6 @@ export function statementMerger({declarationFilename, ...options}: DeclarationBu
 				sourceFile.hasNoDefaultLib,
 				mergeLibReferenceDirectives(sourceFile)
 			);
-
-			if (options.pluginOptions.debug) {
-				console.log(`=== AFTER STATEMENT MERGING === (${sourceFileName})`);
-				console.log(options.printer.printFile(result));
-			}
 
 			return result;
 		};

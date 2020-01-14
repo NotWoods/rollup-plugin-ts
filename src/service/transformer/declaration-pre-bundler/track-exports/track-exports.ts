@@ -47,11 +47,6 @@ export function trackExports(options: DeclarationPreBundlerOptions): Transformer
 			// If the SourceFile is not part of the local module names, remove all statements from it and return immediately
 			if (!options.localModuleNames.includes(sourceFileName)) return updateSourceFileNode(sourceFile, [], true);
 
-			if (options.pluginOptions.debug) {
-				console.log(`=== BEFORE TRACKING EXPORTS === (${sourceFileName})`);
-				console.log(options.printer.printFile(sourceFile));
-			}
-
 			let exportedSymbolSet = options.sourceFileToExportedSymbolSet.get(sourceFileName);
 
 			if (exportedSymbolSet == null) {
@@ -127,11 +122,6 @@ export function trackExports(options: DeclarationPreBundlerOptions): Transformer
 			}
 
 			let updatedSourceFile = visitEachChild(sourceFile, visitor, context);
-
-			if (options.pluginOptions.debug) {
-				console.log(`=== AFTER TRACKING EXPORTS === (${sourceFileName})`);
-				console.log(options.printer.printFile(updatedSourceFile));
-			}
 
 			return updatedSourceFile;
 		};

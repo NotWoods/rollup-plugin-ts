@@ -13,7 +13,6 @@ export function visitExportAssignment({
 	sourceFile,
 	typeChecker,
 	markAsExported,
-	pluginOptions,
 	getDeconflictedNameAndPropertyName
 }: TrackExportsVisitorOptions<ExportAssignment>): ExportAssignment | VariableStatement | undefined {
 	const declaration = getAliasedDeclaration(node.expression, typeChecker);
@@ -34,9 +33,7 @@ export function visitExportAssignment({
 
 	// If the expression isn't a plain identifier, we'll have to come up with one
 	else {
-		if (pluginOptions.debug) {
-			console.log(`WARNING: Did not handle ExportAssignment with an expression that wasn't an identifier`);
-		}
+		console.warn(`WARNING: Did not handle ExportAssignment with an expression that wasn't an identifier`);
 	}
 
 	return undefined;

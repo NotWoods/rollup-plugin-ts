@@ -21,11 +21,6 @@ export function modularizer({declarationFilename, ...options}: DeclarationBundle
 			// If the SourceFile is not part of the local module names, remove all statements from it and return immediately
 			if (sourceFileName !== normalize(declarationFilename)) return updateSourceFileNode(sourceFile, [], true);
 
-			if (options.pluginOptions.debug) {
-				console.log(`=== BEFORE MODULARIZING === (${sourceFileName})`);
-				console.log(options.printer.printFile(sourceFile));
-			}
-
 			const importDeclarations: (ImportDeclaration | TypeAliasDeclaration | VariableStatement | ModuleDeclaration)[] = [];
 			const exportDeclarations: ExportDeclaration[] = [];
 
@@ -77,11 +72,6 @@ export function modularizer({declarationFilename, ...options}: DeclarationBundle
 				sourceFile.hasNoDefaultLib,
 				sourceFile.libReferenceDirectives
 			);
-
-			if (options.pluginOptions.debug) {
-				console.log(`=== AFTER MODULARIZING === (${sourceFileName})`);
-				console.log(options.printer.printFile(updatedSourceFile));
-			}
 
 			return updatedSourceFile;
 		};

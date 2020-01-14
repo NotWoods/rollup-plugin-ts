@@ -87,11 +87,6 @@ export function deconflicter(options: DeclarationPreBundlerOptions): Transformer
 			// If the SourceFile is not part of the local module names, remove all statements from it and return immediately
 			if (!options.localModuleNames.includes(sourceFileName)) return updateSourceFileNode(sourceFile, [], true);
 
-			if (options.pluginOptions.debug) {
-				console.log(`=== BEFORE DECONFLICTING === (${sourceFileName})`);
-				console.log(options.printer.printFile(sourceFile));
-			}
-
 			const chunkFileNameResult = getChunkFilename({...options, fileName: sourceFileName});
 
 			// If no chunk file name could be detected, skip this file
@@ -214,11 +209,6 @@ export function deconflicter(options: DeclarationPreBundlerOptions): Transformer
 			};
 
 			const result = visitEachChild(sourceFile, nextNode => deconflictVisitorOptions.continuation(nextNode, baseContinuationOptions), context);
-
-			if (options.pluginOptions.debug) {
-				console.log(`=== AFTER DECONFLICTING === (${sourceFileName})`);
-				console.log(options.printer.printFile(result));
-			}
 
 			return result;
 		};

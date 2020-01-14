@@ -15,7 +15,6 @@ export function getPluginOptions(options: Partial<TypescriptPluginOptions>): Typ
 		include = [],
 		exclude = [],
 		transpileOnly = false,
-		debug = false,
 		fileSystem = REAL_FILE_SYSTEM
 	} = options;
 
@@ -27,7 +26,6 @@ export function getPluginOptions(options: Partial<TypescriptPluginOptions>): Typ
 		include,
 		tsconfig,
 		transpileOnly,
-		debug,
 		fileSystem
 	};
 }

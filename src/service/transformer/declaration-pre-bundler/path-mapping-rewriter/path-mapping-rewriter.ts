@@ -26,11 +26,6 @@ export function pathMappingRewriter(options: DeclarationPreBundlerOptions): Tran
 			// If the SourceFile is not part of the local module names, remove all statements from it and return immediately
 			if (!options.localModuleNames.includes(sourceFileName)) return updateSourceFileNode(sourceFile, [], true);
 
-			if (options.pluginOptions.debug) {
-				console.log(`=== BEFORE PATH REWRITING === (${sourceFileName})`);
-				console.log(options.printer.printFile(sourceFile));
-			}
-
 			// Prepare some VisitorOptions
 			const visitorOptions = {
 				sourceFile,
@@ -58,11 +53,6 @@ export function pathMappingRewriter(options: DeclarationPreBundlerOptions): Tran
 			}
 
 			const result = visitEachChild(sourceFile, visitor, context);
-
-			if (options.pluginOptions.debug) {
-				console.log(`=== AFTER PATH REWRITING === (${normalize(sourceFile.fileName)})`);
-				console.log(options.printer.printFile(result));
-			}
 
 			return result;
 		};
