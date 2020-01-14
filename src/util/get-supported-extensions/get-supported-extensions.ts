@@ -8,11 +8,9 @@ export type SupportedExtensions = Set<string>;
  * @param {boolean} allowJson
  * @returns {SupportedExtensions}
  */
-export function getSupportedExtensions(allowJs: boolean, allowJson: boolean): SupportedExtensions {
-	return new Set([
-		TS_EXTENSION,
-		TSX_EXTENSION,
-		...(allowJs ? [JS_EXTENSION, JSX_EXTENSION, MJS_EXTENSION, MJSX_EXTENSION] : []),
-		...(allowJson ? [JSON_EXTENSION] : [])
-	]);
+export function getSupportedExtensions(allowJs: boolean | undefined, allowJson: boolean | undefined): SupportedExtensions {
+	const extensions = [TS_EXTENSION, TSX_EXTENSION];
+	if (allowJs) extensions.push(JS_EXTENSION, JSX_EXTENSION, MJS_EXTENSION, MJSX_EXTENSION);
+	if (allowJson) extensions.push(JSON_EXTENSION);
+	return new Set(extensions);
 }

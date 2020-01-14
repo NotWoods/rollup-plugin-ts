@@ -3,7 +3,7 @@ import {rollup, RollupOptions, RollupOutput} from "rollup";
 import typescriptRollupPlugin from "../../src/plugin/typescript-plugin";
 import {sys} from "typescript";
 import {REAL_FILE_SYSTEM} from "../../src/util/file-system/file-system";
-import {HookRecord, InputCompilerOptions} from "../../src/plugin/i-typescript-plugin-options";
+import {InputCompilerOptions} from "../../src/plugin/i-typescript-plugin-options";
 import {DECLARATION_EXTENSION, DECLARATION_MAP_EXTENSION} from "../../src/constant/constant";
 
 // tslint:disable:no-any
@@ -34,7 +34,6 @@ export interface GenerateRollupBundleOptions {
 	tsconfig: Partial<InputCompilerOptions>;
 	transpileOnly: boolean;
 	debug: boolean;
-	hook?: Partial<HookRecord>;
 }
 
 /**
@@ -45,13 +44,7 @@ export interface GenerateRollupBundleOptions {
  */
 export async function generateRollupBundle(
 	inputFiles: TestFile[] | TestFile,
-	{
-		rollupOptions = {},
-		tsconfig = {},
-		transpileOnly = false,
-		debug = false,
-		hook = {outputPath: path => path}
-	}: Partial<GenerateRollupBundleOptions> = {}
+	{rollupOptions = {}, tsconfig = {}, transpileOnly = false}: Partial<GenerateRollupBundleOptions> = {}
 ): Promise<GenerateRollupBundleResult> {
 	const cwd = process.cwd();
 
@@ -119,7 +112,6 @@ export async function generateRollupBundle(
 			},
 			typescriptRollupPlugin({
 				transpileOnly,
-				debug,
 				tsconfig: {
 					target: "esnext",
 					declaration: true,
@@ -127,7 +119,6 @@ export async function generateRollupBundle(
 					baseUrl: ".",
 					...tsconfig
 				},
-				hook,
 				fileSystem: {
 					...REAL_FILE_SYSTEM,
 					useCaseSensitiveFileNames: true,

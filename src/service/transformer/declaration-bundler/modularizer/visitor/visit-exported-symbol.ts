@@ -28,7 +28,6 @@ export interface VisitExportedSymbolOptions {
 	exportedSymbol: ExportedSymbol;
 	supportedExtensions: SupportedExtensions;
 	chunkToOriginalFileMap: ChunkToOriginalFileMap;
-	relativeChunkFileName: string;
 	absoluteChunkFileName: string;
 	isEntryModule: boolean;
 	isEntryChunk: boolean;

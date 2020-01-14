@@ -4,7 +4,6 @@ import {sync} from "find-up";
 import {normalize} from "path";
 import {DECLARATION_EXTENSION, JS_EXTENSION} from "../../../constant/constant";
 import {FileSystem} from "../../../util/file-system/file-system";
-import {IncrementalLanguageService} from "../../language-service/incremental-language-service";
 import {SupportedExtensions} from "../../../util/get-supported-extensions/get-supported-extensions";
 
 export interface ResolveCacheOptions {
@@ -21,7 +20,7 @@ export interface IGetResolvedIdWithCachingOptions {
 	parent: string;
 	options: CompilerOptions;
 	supportedExtensions: SupportedExtensions;
-	moduleResolutionHost: ModuleResolutionHost | IncrementalLanguageService;
+	moduleResolutionHost: ModuleResolutionHost;
 }
 
 /**

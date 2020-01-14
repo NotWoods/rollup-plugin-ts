@@ -15,7 +15,7 @@ import {
 	ReferenceCache,
 	SourceFileToNodeToReferencedIdentifiersCache
 } from "../service/transformer/declaration-bundler/reference/cache/reference-cache";
-import {CompilerOptions, createPrinter} from "typescript";
+import {CompilerOptions, createPrinter, LanguageServiceHost, CompilerHost} from "typescript";
 import {OutputBundle, OutputOptions, PluginContext, SourceDescription} from "rollup";
 import {ModuleDependencyMap} from "../util/module/get-module-dependencies";
 import {ensurePosix, setExtension} from "../util/path/path-util";
@@ -24,7 +24,6 @@ import {TypescriptPluginOptions} from "../plugin/i-typescript-plugin-options";
 import {Resolver} from "../util/resolve-id/resolve-id";
 import {SupportedExtensions} from "../util/get-supported-extensions/get-supported-extensions";
 import {preBundleDeclarationsForChunk, PreBundleDeclarationsForChunkOptions} from "./pre-bundle-declarations-for-chunk";
-import {IncrementalLanguageService} from "../service/language-service/incremental-language-service";
 import {bundleDeclarationsForChunk} from "./bundle-declarations-for-chunk";
 import {ensureDefined} from "../util/assert-defined/assert-defined";
 import {FileSystem} from "../util/file-system/file-system";
@@ -37,7 +36,7 @@ export interface EmitDeclarationsOptions {
 	pluginContext: PluginContext;
 	bundle: OutputBundle;
 	compilerOptions: CompilerOptions;
-	languageServiceHost: IncrementalLanguageService;
+	languageServiceHost: CompilerHost & Pick<LanguageServiceHost, "getCompilationSettings">;
 	pluginOptions: TypescriptPluginOptions;
 	outputOptions: OutputOptions;
 	moduleDependencyMap: ModuleDependencyMap;
@@ -70,7 +69,6 @@ export function emitDeclarations(options: EmitDeclarationsOptions) {
 	const sharedOptions = {
 		...options,
 		chunkToOriginalFileMap,
-		generateMap,
 		nodeIdentifierCache,
 		chunkForModuleCache,
 		printer,
@@ -86,13 +84,11 @@ export function emitDeclarations(options: EmitDeclarationsOptions) {
 	for (const pass of [1, 2] as const) {
 		for (const chunk of mergeChunksResult.mergedChunks) {
 			// Prepare file names
-			const relativeChunkFileName = normalize(chunk.fileName);
 			const absoluteChunkFileName = join(absoluteOutDir, chunk.fileName);
 			const declarationFilename = setExtension(chunk.fileName, DECLARATION_EXTENSION);
 			const declarationMapFilename = setExtension(chunk.fileName, DECLARATION_MAP_EXTENSION);
 			const absoluteDeclarationFilename = join(absoluteDeclarationOutDir, declarationFilename);
 			const absoluteDeclarationMapFilename = join(absoluteDeclarationOutDir, declarationMapFilename);
-			const relativeDeclarationMapDirname = join(relativeDeclarationOutDir, dirname(declarationMapFilename));
 			const absoluteDeclarationMapDirname = join(absoluteDeclarationOutDir, dirname(declarationMapFilename));
 
 			// We'll need to work with POSIX paths for now
@@ -123,12 +119,10 @@ export function emitDeclarations(options: EmitDeclarationsOptions) {
 				absoluteDeclarationFilename,
 				absoluteDeclarationMapFilename,
 				declarationFilename,
-				relativeDeclarationMapDirname,
 				absoluteDeclarationMapDirname,
 				declarationMapFilename,
 				entryFileNames,
 				localModuleNames,
-				relativeChunkFileName,
 
 				generateUniqueVariableName: (candidate: string, sourceFileName: string): string => {
 					const suffix = "_$";
@@ -158,6 +152,7 @@ export function emitDeclarations(options: EmitDeclarationsOptions) {
 				case 2: {
 					const bundleResult = bundleDeclarationsForChunk({
 						...baseOptions,
+						generateMap,
 						preBundleResult: ensureDefined(
 							chunkToPreBundleResult.get(absoluteChunkFileName),
 							` Expected a prebundle result to present for chunk: '${absoluteChunkFileName}'`

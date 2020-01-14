@@ -81,9 +81,10 @@ export class IncrementalLanguageService implements LanguageServiceHost, Compiler
 	 * Gets a SourceFile from the given fileName
 	 */
 	public getSourceFile(fileName: string): SourceFile | undefined {
-		const program = this.options.languageService().getProgram();
-		if (program == null) return undefined;
-		return program.getSourceFile(fileName);
+		return this.options
+			.languageService()
+			.getProgram()
+			?.getSourceFile(fileName);
 	}
 
 	/**

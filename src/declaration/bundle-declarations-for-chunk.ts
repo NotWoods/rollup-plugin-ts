@@ -4,6 +4,7 @@ import {declarationBundler} from "../service/transformer/declaration-bundler/dec
 import {PreBundleDeclarationsForChunkOptions} from "./pre-bundle-declarations-for-chunk";
 
 export interface BundleDeclarationsForChunkOptions extends PreBundleDeclarationsForChunkOptions {
+	generateMap: boolean;
 	preBundleResult: SourceDescription;
 }
 

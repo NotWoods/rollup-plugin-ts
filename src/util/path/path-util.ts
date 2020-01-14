@@ -11,8 +11,6 @@ import slash from "slash";
 
 /**
  * Ensures that the given path follows posix file names
- * @param {string} path
- * @returns {string}
  */
 export function ensurePosix(path: string): string {
 	return slash(path);
@@ -20,8 +18,6 @@ export function ensurePosix(path: string): string {
 
 /**
  * Gets the extension of the given file
- * @param {string} file
- * @returns {string}
  */
 export function getExtension(file: string): string {
 	if (file.endsWith(DECLARATION_EXTENSION)) return DECLARATION_EXTENSION;
@@ -31,8 +27,6 @@ export function getExtension(file: string): string {
 
 /**
  * Returns true if the given path represents an external library
- * @param {string} path
- * @returns {boolean}
  */
 export function isExternalLibrary(path: string): boolean {
 	return !path.startsWith(".") && !path.startsWith("/");
@@ -40,8 +34,6 @@ export function isExternalLibrary(path: string): boolean {
 
 /**
  * Returns true if the given path represents an internal Typescript file
- * @param {string} path
- * @returns {boolean}
  */
 export function isInternalFile(path: string): boolean {
 	return DEFAULT_LIB_NAMES.has(path) || path.toLowerCase().endsWith(TSLIB_NAME);
@@ -49,8 +41,6 @@ export function isInternalFile(path: string): boolean {
 
 /**
  * Returns true if the given id represents tslib
- * @param {string} path
- * @return {boolean}
  */
 export function isTslib(path: string): boolean {
 	return path === "tslib" || path.endsWith(`/tslib/${TSLIB_NAME}`) || path.endsWith("/tslib/tslib.es6.js") || path.endsWith("/tslib/tslib.js");
@@ -58,8 +48,6 @@ export function isTslib(path: string): boolean {
 
 /**
  * Returns true if the given path represents the entry point for rollup-plugin-multi-entry
- * @param {string} path
- * @return {boolean}
  */
 export function isRollupPluginMultiEntry(path: string): boolean {
 	return path === ROLLUP_PLUGIN_MULTI_ENTRY;
@@ -67,8 +55,6 @@ export function isRollupPluginMultiEntry(path: string): boolean {
 
 /**
  * Strips the extension from a file
- * @param {string} file
- * @returns {string}
  */
 export function stripKnownExtension(file: string): string {
 	let currentExtname: string | undefined;
@@ -87,9 +73,6 @@ export function stripKnownExtension(file: string): string {
 
 /**
  * Sets the given extension for the given file
- * @param {string} file
- * @param {string} extension
- * @returns {string}
  */
 export function setExtension(file: string, extension: string): string {
 	return normalize(`${stripKnownExtension(file)}${extension}`);
@@ -97,9 +80,6 @@ export function setExtension(file: string, extension: string): string {
 
 /**
  * Ensure that the given path has a leading "."
- * @param {string} path
- * @param {boolean} [externalGuard=true]
- * @return {string}
  */
 export function ensureHasLeadingDotAndPosix(path: string, externalGuard: boolean = true): string {
 	if (externalGuard && isExternalLibrary(path)) return path;
@@ -112,9 +92,6 @@ export function ensureHasLeadingDotAndPosix(path: string, externalGuard: boolean
 
 /**
  * Ensures that the given path is relative
- * @param {string} root
- * @param {string} path
- * @returns {string}
  */
 export function ensureRelative(root: string, path: string): string {
 	// If the path is already relative, simply return it
@@ -128,9 +105,6 @@ export function ensureRelative(root: string, path: string): string {
 
 /**
  * Ensures that the given path is absolute
- * @param {string} root
- * @param {string} path
- * @returns {string}
  */
 export function ensureAbsolute(root: string, path: string): string {
 	// If the path is already absolute, simply return it

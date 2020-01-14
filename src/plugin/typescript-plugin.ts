@@ -150,8 +150,8 @@ export default function typescriptRollupPlugin(pluginInputOptions: Partial<Types
 			});
 
 			SUPPORTED_EXTENSIONS = getSupportedExtensions(
-				Boolean(parsedCommandLineResult.parsedCommandLine.options.allowJs),
-				Boolean(parsedCommandLineResult.parsedCommandLine.options.resolveJsonModule)
+				parsedCommandLineResult.parsedCommandLine.options.allowJs,
+				parsedCommandLineResult.parsedCommandLine.options.resolveJsonModule
 			);
 
 			canEmitForFile = (id: string) => filter(id) && SUPPORTED_EXTENSIONS.has(getExtension(id));
@@ -288,13 +288,13 @@ export default function typescriptRollupPlugin(pluginInputOptions: Partial<Types
 		 */
 		generateBundle(this: PluginContext, outputOptions: OutputOptions, bundle: OutputBundle): void {
 			// Only emit diagnostics if the plugin options allow it
-			if (!Boolean(pluginOptions.transpileOnly)) {
+			if (!pluginOptions.transpileOnly) {
 				// Emit all reported diagnostics
 				emitDiagnosticsThroughRollup({languageServiceHost, languageService, context: this});
 			}
 
 			// Emit declaration files if required
-			if (Boolean(parsedCommandLineResult.parsedCommandLine.options.declaration)) {
+			if (parsedCommandLineResult.parsedCommandLine.options.declaration) {
 				emitDeclarations({
 					bundle,
 					pluginContext: this,

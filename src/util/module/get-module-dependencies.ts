@@ -43,7 +43,7 @@ export function getModuleDependencies(
 
 	const localDependencies = new Set<string>();
 
-	const addDependency = (resolvedFileName: string) => {
+	function addDependency(resolvedFileName: string) {
 		const dependency = normalize(resolvedFileName);
 		const code = languageServiceHost.readFile(dependency);
 		if (code != null) {
@@ -53,7 +53,7 @@ export function getModuleDependencies(
 				languageServiceHost.addFile(dependency, code);
 			}
 		}
-	};
+	}
 
 	function visitImportOrExportDeclaration(node: ImportDeclaration | ExportDeclaration): ImportDeclaration | ExportDeclaration {
 		const specifier = node.moduleSpecifier;

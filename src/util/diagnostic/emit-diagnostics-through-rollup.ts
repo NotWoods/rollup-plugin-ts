@@ -4,14 +4,14 @@ import {
 	formatDiagnosticsWithColorAndContext,
 	getPreEmitDiagnostics,
 	Diagnostic,
-	LanguageService
+	LanguageService,
+	FormatDiagnosticsHost
 } from "typescript";
 import {PluginContext, RollupLogProps} from "rollup";
-import {IncrementalLanguageService} from "../../service/language-service/incremental-language-service";
 
 interface IGetDiagnosticsOptions {
 	languageService: LanguageService;
-	languageServiceHost: IncrementalLanguageService;
+	languageServiceHost: FormatDiagnosticsHost;
 	context: PluginContext;
 }
 

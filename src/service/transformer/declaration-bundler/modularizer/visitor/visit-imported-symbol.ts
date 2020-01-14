@@ -48,7 +48,6 @@ export interface VisitImportedSymbolOptions {
 	module: string;
 	supportedExtensions: SupportedExtensions;
 	chunkToOriginalFileMap: ChunkToOriginalFileMap;
-	relativeChunkFileName: string;
 	absoluteChunkFileName: string;
 }
 
