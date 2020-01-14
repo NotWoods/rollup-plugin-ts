@@ -67,6 +67,8 @@ export class IncrementalLanguageService implements LanguageServiceHost, Compiler
 		this.addDefaultLibs();
 		this.addDefaultFileNames();
 		this.transformers = options.transformers;
+
+		this.realpath = this.options.fileSystem.realpath;
 	}
 
 	/**
@@ -235,9 +237,7 @@ export class IncrementalLanguageService implements LanguageServiceHost, Compiler
 	 * @param {string} path
 	 * @returns {string}
 	 */
-	public realpath(path: string): string {
-		return this.options.fileSystem.realpath(path);
-	}
+	public realpath?(path: string): string;
 
 	/**
 	 * Gets the default lib file name based on the given CompilerOptions
@@ -253,9 +253,7 @@ export class IncrementalLanguageService implements LanguageServiceHost, Compiler
 	 * @returns {string}
 	 */
 	public getNewLine(): string {
-		return this.options.parsedCommandLine.options.newLine != null
-			? getNewLineCharacter(this.options.parsedCommandLine.options.newLine)
-			: this.options.fileSystem.newLine;
+		return getNewLineCharacter(this.options.parsedCommandLine.options.newLine, this.options.fileSystem);
 	}
 
 	/**
