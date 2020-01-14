@@ -4,7 +4,6 @@ import {getParsedCommandLine} from "../util/get-parsed-command-line/get-parsed-c
 import {getForcedCompilerOptions} from "../util/get-forced-compiler-options/get-forced-compiler-options";
 import {IncrementalLanguageService} from "../service/language-service/incremental-language-service";
 import {getSourceDescriptionFromEmitOutput} from "../util/get-source-description-from-emit-output/get-source-description-from-emit-output";
-import {IEmitCache} from "../service/cache/emit-cache/i-emit-cache";
 import {EmitCache} from "../service/cache/emit-cache/emit-cache";
 import {emitDiagnosticsThroughRollup} from "../util/diagnostic/emit-diagnostics-through-rollup";
 import {getSupportedExtensions} from "../util/get-supported-extensions/get-supported-extensions";
@@ -13,7 +12,6 @@ import {ModuleResolutionHost} from "../service/module-resolution-host/module-res
 import {takeBundledFilesNames} from "../util/take-bundled-filenames/take-bundled-filenames";
 import {TypescriptPluginOptions} from "./i-typescript-plugin-options";
 import {getPluginOptions} from "../util/plugin-options/get-plugin-options";
-import {IResolveCache} from "../service/cache/resolve-cache/i-resolve-cache";
 import {ResolveCache} from "../service/cache/resolve-cache/resolve-cache";
 // @ts-ignore
 import {createFilter} from "rollup-pluginutils";
@@ -79,19 +77,13 @@ export default function typescriptRollupPlugin(pluginInputOptions: Partial<Types
 	 */
 	let ambientResolver: Resolver;
 
-	/**
-	 * The EmitCache to use
-	 * @type {EmitCache}
-	 */
-	const emitCache: IEmitCache = new EmitCache();
+	/** The EmitCache to use */
+	const emitCache = new EmitCache();
 
 	const moduleDependencyCache = new Map<string, Set<string>>();
 
-	/**
-	 * The ResolveCache to use
-	 * @type {ResolveCache}
-	 */
-	const resolveCache: IResolveCache = new ResolveCache({fileSystem: pluginOptions.fileSystem});
+	/** The ResolveCache to use */
+	const resolveCache = new ResolveCache({fileSystem: pluginOptions.fileSystem});
 
 	/**
 	 * A Map between file names and the Set of absolute paths they depend on. Not all will be part of Rollup's chunk modules (specifically, emit-less ones won't be).
@@ -183,12 +175,12 @@ export default function typescriptRollupPlugin(pluginInputOptions: Partial<Types
 
 			resolver = (id: string, parent: string) => {
 				const resolved = resolve(id, parent);
-				return resolved == null ? undefined : resolved.resolvedFileName;
+				return resolved?.resolvedFileName;
 			};
 
 			ambientResolver = (id: string, parent: string) => {
 				const resolved = resolve(id, parent);
-				return resolved == null ? undefined : resolved.resolvedAmbientFileName != null ? resolved.resolvedAmbientFileName : resolved.resolvedFileName;
+				return resolved?.resolvedAmbientFileName ?? resolved?.resolvedFileName;
 			};
 
 			// Hook up a LanguageServiceHost and a LanguageService
@@ -281,7 +273,7 @@ export default function typescriptRollupPlugin(pluginInputOptions: Partial<Types
 		 * @param {string} parent
 		 * @returns {string | null}
 		 */
-		resolveId(this: PluginContext, id: string, parent: string | undefined): string | null {
+		resolveId(this: PluginContext, id: string, parent: string | undefined) {
 			// Don't proceed if there is no parent (in which case this is an entry module)
 			if (parent == null) return null;
 
@@ -294,7 +286,7 @@ export default function typescriptRollupPlugin(pluginInputOptions: Partial<Types
 			}
 
 			const resolveResult = resolver(id, parent);
-			return resolveResult == null ? null : resolveResult;
+			return resolveResult;
 		},
 
 		/**

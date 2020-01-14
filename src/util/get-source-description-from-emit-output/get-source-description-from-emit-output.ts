@@ -1,8 +1,23 @@
-import {EmitOutput} from "typescript";
+import {EmitOutput, OutputFile} from "typescript";
 import {SourceDescription} from "rollup";
-import {SOURCE_MAP_COMMENT} from "../../constant/constant";
-import {isCodeOutputFile} from "../is-code-output-file/is-code-output-file";
-import {isMapOutputFile} from "../is-map-output-file/is-map-output-file";
+import {SOURCE_MAP_COMMENT, DECLARATION_EXTENSION, DECLARATION_MAP_EXTENSION, SOURCE_MAP_EXTENSION} from "../../constant/constant";
+import {getExtension} from "../path/path-util";
+
+/**
+ * Returns true if the given OutputFile represents code
+ */
+function isCodeOutputFile({name}: OutputFile): boolean {
+	const extension = getExtension(name);
+	return ![SOURCE_MAP_EXTENSION, DECLARATION_EXTENSION, DECLARATION_MAP_EXTENSION].includes(extension);
+}
+
+/**
+ * Returns true if the given OutputFile represents some source map
+ */
+function isMapOutputFile({name}: OutputFile): boolean {
+	const extension = getExtension(name);
+	return [SOURCE_MAP_EXTENSION, DECLARATION_MAP_EXTENSION].includes(extension);
+}
 
 /**
  * Gets a SourceDescription from the given EmitOutput

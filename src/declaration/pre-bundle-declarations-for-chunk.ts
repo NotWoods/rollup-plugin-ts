@@ -88,6 +88,6 @@ export function preBundleDeclarationsForChunk(options: PreBundleDeclarationsForC
 	);
 	return {
 		code,
-		...(map == null ? {} : {map: JSON.stringify(map)})
+		map: map == null ? undefined : JSON.stringify(map)
 	};
 }

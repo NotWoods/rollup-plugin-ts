@@ -1,5 +1,9 @@
-import {IResolveModuleOptions} from "./i-resolve-module-options";
-import {ExtendedResolvedModule} from "../../service/cache/resolve-cache/i-resolve-cache";
+import {ExtendedResolvedModule, ResolveCache} from "../../service/cache/resolve-cache/resolve-cache";
+import {IGetResolvedIdWithCachingOptions} from "../../service/cache/resolve-cache/resolve-cache";
+
+interface IResolveModuleOptions extends IGetResolvedIdWithCachingOptions {
+	resolveCache: ResolveCache;
+}
 
 /**
  * Resolves an id from the given parent

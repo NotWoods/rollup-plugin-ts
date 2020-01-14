@@ -5,24 +5,39 @@ import {
 	ModuleResolutionHost,
 	ResolvedModuleWithFailedLookupLocations,
 	ResolvedProjectReference,
-	resolveModuleName
+	resolveModuleName,
+	ResolvedModuleFull
 } from "typescript";
-import {IGetResolvedIdWithCachingOptions} from "./i-get-resolved-id-with-caching-options";
-import {ExtendedResolvedModule, IResolveCache} from "./i-resolve-cache";
 import {ensureAbsolute, setExtension} from "../../../util/path/path-util";
 import {sync} from "find-up";
 import {normalize} from "path";
 import {DECLARATION_EXTENSION, JS_EXTENSION} from "../../../constant/constant";
 import {FileSystem} from "../../../util/file-system/file-system";
+import {IncrementalLanguageService} from "../../language-service/incremental-language-service";
+import {SupportedExtensions} from "../../../util/get-supported-extensions/get-supported-extensions";
 
 export interface ResolveCacheOptions {
 	fileSystem: FileSystem;
 }
 
+export interface ExtendedResolvedModule extends Omit<ResolvedModuleFull, "resolvedFileName"> {
+	resolvedFileName: string | undefined;
+	resolvedAmbientFileName: string | undefined;
+}
+
+export interface IGetResolvedIdWithCachingOptions {
+	id: string;
+	parent: string;
+	cwd: string;
+	options: CompilerOptions;
+	supportedExtensions: SupportedExtensions;
+	moduleResolutionHost: ModuleResolutionHost | IncrementalLanguageService;
+}
+
 /**
  * A Cache over resolved modules
  */
-export class ResolveCache implements IResolveCache {
+export class ResolveCache {
 	/**
 	 * A memory-persistent cache of resolved modules for files over time
 	 * @type {Map<string, Map<ExtendedResolvedModule|null>>}
