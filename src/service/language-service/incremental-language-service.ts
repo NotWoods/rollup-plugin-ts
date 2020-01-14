@@ -1,7 +1,6 @@
 import {
 	CompilerHost,
 	CompilerOptions,
-	CustomTransformers,
 	getDefaultLibFileName,
 	IScriptSnapshot,
 	LanguageServiceHost,
@@ -18,7 +17,6 @@ import {IFile, IFileInput} from "./i-file";
 import {getScriptKindFromPath} from "../../util/get-script-kind-from-path/get-script-kind-from-path";
 import {DEFAULT_LIB_NAMES} from "../../constant/constant";
 import {ensureAbsolute, isInternalFile} from "../../util/path/path-util";
-import {CustomTransformersFunction} from "../../util/merge-transformers/i-custom-transformer-options";
 import {IExtendedDiagnostic} from "../../diagnostic/i-extended-diagnostic";
 import {resolveId} from "../../util/resolve-id/resolve-id";
 import {FileSystem} from "../../util/file-system/file-system";
@@ -43,15 +41,10 @@ export class IncrementalLanguageService implements LanguageServiceHost, Compiler
 	 * A Map between file names and their IFiles
 	 */
 	private readonly files: Map<string, IFile> = new Map();
-	/**
-	 * The CustomTransformersFunction to use, if any
-	 */
-	private readonly transformers: CustomTransformersFunction | undefined;
 
 	constructor(private readonly options: ILanguageServiceOptions) {
 		this.addDefaultLibs();
 		this.addDefaultFileNames();
-		this.transformers = options.transformers;
 
 		this.realpath = this.options.fileSystem.realpath;
 		this.readDirectory = this.options.fileSystem.readDirectory;
@@ -223,36 +216,6 @@ export class IncrementalLanguageService implements LanguageServiceHost, Compiler
 	 */
 	public getCompilationSettings(): CompilerOptions {
 		return this.options.parsedCommandLine.options;
-	}
-
-	/**
-	 * Gets the Custom Transformers to use, depending on the current emit mode
-	 */
-	public getCustomTransformers(): CustomTransformers | undefined {
-		const languageService = this.options.languageService();
-		if (this.transformers == null) return undefined;
-		return this.transformers({
-			languageService,
-			languageServiceHost: this,
-			program: languageService.getProgram(),
-
-			/**
-			 * This hook can add diagnostics from within CustomTransformers. These will be emitted alongside Typescript diagnostics seamlessly
-			 * @param {IExtendedDiagnostic} diagnostics
-			 */
-			addDiagnostics: (...diagnostics) => {
-				diagnostics.forEach(diagnostic => {
-					// Skip diagnostics that doesn't point to a specific file
-					if (diagnostic.file == null) return;
-					const fileMatch = this.files.get(diagnostic.file.fileName);
-					// If no file matches the one of the diagnostic, skip it
-					if (fileMatch == null) return;
-
-					// Add the diagnostic
-					fileMatch.transformerDiagnostics.push(diagnostic);
-				});
-			}
-		});
 	}
 
 	/**

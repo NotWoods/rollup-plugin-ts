@@ -2,9 +2,6 @@ import {Declaration, Expression, QualifiedName, Symbol, TypeChecker} from "types
 
 /**
  * Gets the Declaration for the given Expression
- * @param {Expression|Symbol} node
- * @param {TypeChecker} typeChecker
- * @return {Declaration | undefined}
  */
 export function getAliasedDeclaration(node: Expression | Symbol | QualifiedName | undefined, typeChecker: TypeChecker): Declaration | undefined {
 	let symbol: Symbol | undefined;

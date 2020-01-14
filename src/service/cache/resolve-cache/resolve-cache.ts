@@ -1,13 +1,4 @@
-import {
-	CompilerOptions,
-	Extension,
-	ModuleResolutionCache,
-	ModuleResolutionHost,
-	ResolvedModuleWithFailedLookupLocations,
-	ResolvedProjectReference,
-	resolveModuleName,
-	ResolvedModuleFull
-} from "typescript";
+import {CompilerOptions, Extension, ModuleResolutionHost, resolveModuleName, ResolvedModuleFull} from "typescript";
 import {ensureAbsolute, setExtension} from "../../../util/path/path-util";
 import {sync} from "find-up";
 import {normalize} from "path";
@@ -44,7 +35,9 @@ export class ResolveCache {
 	 */
 	private readonly RESOLVE_CACHE: Map<string, Map<string, ExtendedResolvedModule | null>> = new Map();
 
-	constructor(private readonly options: ResolveCacheOptions) {}
+	constructor(private readonly options: ResolveCacheOptions) {
+		this.resolveModuleName = resolveModuleName;
+	}
 
 	/**
 	 * Gets the resolved path for an id from a parent
@@ -90,25 +83,11 @@ export class ResolveCache {
 
 	/**
 	 * Resolves a module name, including internal helpers such as tslib, even if they aren't included in the language service
-	 * @type {string | null}
 	 */
-	public resolveModuleName(
-		moduleName: string,
-		containingFile: string,
-		compilerOptions: CompilerOptions,
-		host: ModuleResolutionHost,
-		cache?: ModuleResolutionCache,
-		redirectedReference?: ResolvedProjectReference
-	): ResolvedModuleWithFailedLookupLocations {
-		// Default to using Typescript's resolver directly
-		return resolveModuleName(moduleName, containingFile, compilerOptions, host, cache, redirectedReference);
-	}
+	public resolveModuleName: typeof resolveModuleName;
 
 	/**
 	 * Finds the given helper inside node_modules (or at least attempts to)
-	 * @param {string} path
-	 * @param {string} cwd
-	 * @return {string | undefined}
 	 */
 	public findHelperFromNodeModules(path: string, cwd: string): string | undefined {
 		let cacheResult = this.getFromCache(path, cwd);
@@ -141,8 +120,6 @@ export class ResolveCache {
 	/**
 	 * Gets a cached module result for the given file from the given parent and returns it if it exists already.
 	 * If not, it will compute it, update the cache, and then return it
-	 * @param {IGetResolvedIdWithCachingOptions} opts
-	 * @returns {ExtendedResolvedModule|null}
 	 */
 	public get({id, parent, moduleResolutionHost, options, cwd, supportedExtensions}: IGetResolvedIdWithCachingOptions): ExtendedResolvedModule | null {
 		let cacheResult = this.getFromCache(id, parent);

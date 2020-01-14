@@ -16,8 +16,6 @@ import {ResolveCache} from "../service/cache/resolve-cache/resolve-cache";
 // @ts-ignore
 import {createFilter} from "rollup-pluginutils";
 import {resolveId} from "../util/resolve-id/resolve-id";
-import {mergeTransformers} from "../util/merge-transformers/merge-transformers";
-import {ensureArray} from "../util/ensure-array/ensure-array";
 import {GetParsedCommandLineResult} from "../util/get-parsed-command-line/get-parsed-command-line-result";
 import {matchAll} from "@wessberg/stringutil";
 import {Resolver} from "../util/resolve-id/resolver";
@@ -37,7 +35,6 @@ const PLUGIN_NAME = "Typescript";
 export default function typescriptRollupPlugin(pluginInputOptions: Partial<TypescriptPluginOptions> = {}): Plugin {
 	const pluginOptions: TypescriptPluginOptions = getPluginOptions(pluginInputOptions);
 	const {include, exclude, tsconfig, cwd, resolveTypescriptLibFrom} = pluginOptions;
-	const transformers = pluginOptions.transformers == null ? [] : ensureArray(pluginOptions.transformers);
 
 	/**
 	 * The ParsedCommandLine to use with Typescript
@@ -193,7 +190,6 @@ export default function typescriptRollupPlugin(pluginInputOptions: Partial<Types
 				supportedExtensions: SUPPORTED_EXTENSIONS,
 				fileSystem: pluginOptions.fileSystem,
 				parsedCommandLine: parsedCommandLineResult.parsedCommandLine,
-				transformers: mergeTransformers(...transformers),
 				languageService: () => languageService
 			});
 

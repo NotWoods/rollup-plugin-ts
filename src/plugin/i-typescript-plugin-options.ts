@@ -1,5 +1,4 @@
-import {CompilerOptions, CustomTransformers, ParsedCommandLine, Diagnostic} from "typescript";
-import {CustomTransformersFunction} from "../util/merge-transformers/i-custom-transformer-options";
+import {CompilerOptions, ParsedCommandLine, Diagnostic} from "typescript";
 import {FileSystem} from "../util/file-system/file-system";
 
 export interface TsConfigResolverWithFileName {
@@ -30,7 +29,6 @@ export interface TypescriptPluginOptions {
 	tsconfig?: string | Partial<CompilerOptions> | Partial<InputCompilerOptions> | ParsedCommandLine | TsConfigResolver | TsConfigResolverWithFileName;
 	cwd: string;
 	resolveTypescriptLibFrom: string;
-	transformers?: (CustomTransformers | CustomTransformersFunction)[] | CustomTransformers | CustomTransformersFunction;
 	include: string[] | string;
 	exclude: string[] | string;
 	transpileOnly?: boolean;
