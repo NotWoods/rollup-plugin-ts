@@ -1,5 +1,5 @@
 import {isOutputChunk} from "../util/is-output-chunk/is-output-chunk";
-import {dirname, join, normalize, parse, relative} from "path";
+import {dirname, join, normalize, relative} from "path";
 import {getDeclarationOutDir} from "../util/get-declaration-out-dir/get-declaration-out-dir";
 import {getOutDir} from "../util/get-out-dir/get-out-dir";
 import {mergeChunksWithAmbientDependencies} from "../util/chunk/merge-chunks-with-ambient-dependencies";
@@ -95,22 +95,9 @@ export function emitDeclarations(options: EmitDeclarationsOptions) {
 			const relativeDeclarationMapDirname = join(relativeDeclarationOutDir, dirname(declarationMapFilename));
 			const absoluteDeclarationMapDirname = join(absoluteDeclarationOutDir, dirname(declarationMapFilename));
 
-			const augmentedAbsoluteDeclarationFileName = options.pluginOptions.hook.outputPath?.(absoluteDeclarationFilename, "declaration");
-			const rewrittenAbsoluteDeclarationFilename = augmentedAbsoluteDeclarationFileName ?? absoluteDeclarationFilename;
-			const augmentedAbsoluteDeclarationMapFileName = generateMap
-				? options.pluginOptions.hook.outputPath?.(absoluteDeclarationMapFilename, "declarationMap")
-				: undefined;
-			const rewrittenAbsoluteDeclarationMapFilename = augmentedAbsoluteDeclarationMapFileName ?? absoluteDeclarationMapFilename;
-			const rewrittenDeclarationFilename =
-				rewrittenAbsoluteDeclarationFilename === absoluteDeclarationFilename ? declarationFilename : parse(rewrittenAbsoluteDeclarationFilename).base;
-			const rewrittenDeclarationMapFilename =
-				rewrittenAbsoluteDeclarationMapFilename === absoluteDeclarationMapFilename
-					? declarationMapFilename
-					: parse(rewrittenAbsoluteDeclarationMapFilename).base;
-
 			// We'll need to work with POSIX paths for now
-			let emitFileDeclarationFilename = ensurePosix(join(relative(relativeOutDir, relativeDeclarationOutDir), rewrittenDeclarationFilename));
-			let emitFileDeclarationMapFilename = ensurePosix(join(relative(relativeOutDir, relativeDeclarationOutDir), rewrittenDeclarationMapFilename));
+			let emitFileDeclarationFilename = ensurePosix(join(relative(relativeOutDir, relativeDeclarationOutDir), declarationFilename));
+			let emitFileDeclarationMapFilename = ensurePosix(join(relative(relativeOutDir, relativeDeclarationOutDir), declarationMapFilename));
 
 			// Rollup does not allow emitting files outside of the root of the whatever 'dist' directory that has been provided.
 			while (emitFileDeclarationFilename.startsWith("../") || emitFileDeclarationFilename.startsWith("..\\")) {
@@ -146,8 +133,6 @@ export function emitDeclarations(options: EmitDeclarationsOptions) {
 				absoluteChunkFileName,
 				absoluteDeclarationFilename,
 				absoluteDeclarationMapFilename,
-				augmentedAbsoluteDeclarationFileName,
-				augmentedAbsoluteDeclarationMapFileName,
 				declarationFilename,
 				relativeDeclarationMapDirname,
 				absoluteDeclarationMapDirname,
@@ -155,10 +140,6 @@ export function emitDeclarations(options: EmitDeclarationsOptions) {
 				entryFileNames,
 				localModuleNames,
 				relativeChunkFileName,
-				rewrittenAbsoluteDeclarationFilename,
-				rewrittenAbsoluteDeclarationMapFilename,
-				rewrittenDeclarationFilename,
-				rewrittenDeclarationMapFilename,
 
 				generateUniqueVariableName: (candidate: string, sourceFileName: string): string => {
 					const suffix = "_$";

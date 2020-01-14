@@ -33,6 +33,5 @@ export interface TypescriptPluginOptions {
 	exclude: string[] | string;
 	transpileOnly?: boolean;
 	fileSystem: FileSystem;
-	hook: Partial<HookRecord>;
 	debug: boolean;
 }

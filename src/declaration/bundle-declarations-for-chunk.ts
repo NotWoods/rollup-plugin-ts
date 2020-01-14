@@ -23,7 +23,7 @@ export function bundleDeclarationsForChunk(options: BundleDeclarationsForChunkOp
 	// Add a source mapping URL if a map should be generated
 	if (options.generateMap) {
 		if (!code.endsWith("\n")) code += "\n";
-		code += `//# sourceMappingURL=${options.rewrittenDeclarationMapFilename}`;
+		code += `//# sourceMappingURL=${options.declarationMapFilename}`;
 	}
 
 	return {

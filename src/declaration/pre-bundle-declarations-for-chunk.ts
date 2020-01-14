@@ -38,7 +38,7 @@ export function preBundleDeclarationsForChunk(options: PreBundleDeclarationsForC
 
 			if (replacedFile.endsWith(DECLARATION_MAP_EXTENSION)) {
 				const parsedData = JSON.parse(data) as ExistingRawSourceMap;
-				parsedData.file = options.rewrittenDeclarationFilename;
+				parsedData.file = options.declarationFilename;
 				parsedData.sources = parsedData.sources
 					.map(source => {
 						const correctedSource = join(replacedFileDir, source);

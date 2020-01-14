@@ -41,16 +41,10 @@ export interface DeclarationOptions {
 	chunkToOriginalFileMap: ChunkToOriginalFileMap;
 
 	declarationFilename: string;
-	rewrittenDeclarationFilename: string;
 	declarationMapFilename: string;
-	rewrittenDeclarationMapFilename: string;
 
 	absoluteDeclarationFilename: string;
-	augmentedAbsoluteDeclarationFileName: string | undefined;
-	rewrittenAbsoluteDeclarationFilename: string;
 	absoluteDeclarationMapFilename: string;
-	augmentedAbsoluteDeclarationMapFileName: string | undefined;
-	rewrittenAbsoluteDeclarationMapFilename: string;
 
 	relativeDeclarationMapDirname: string;
 	absoluteDeclarationMapDirname: string;

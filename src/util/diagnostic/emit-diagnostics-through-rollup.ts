@@ -1,22 +1,30 @@
-import {IGetDiagnosticsOptions} from "./i-get-diagnostics-options";
-import {DiagnosticCategory, flattenDiagnosticMessageText, formatDiagnosticsWithColorAndContext, getPreEmitDiagnostics, Diagnostic} from "typescript";
-import {RollupError, RollupWarning} from "rollup";
+import {
+	DiagnosticCategory,
+	flattenDiagnosticMessageText,
+	formatDiagnosticsWithColorAndContext,
+	getPreEmitDiagnostics,
+	Diagnostic,
+	LanguageService
+} from "typescript";
+import {RollupError, RollupWarning, PluginContext} from "rollup";
 import {IExtendedDiagnostic} from "../../diagnostic/i-extended-diagnostic";
+import {IncrementalLanguageService} from "../../service/language-service/incremental-language-service";
+
+interface IGetDiagnosticsOptions {
+	languageService: LanguageService;
+	languageServiceHost: IncrementalLanguageService;
+	context: PluginContext;
+}
 
 /**
  * Gets diagnostics for the given fileName
  * @param {IGetDiagnosticsOptions} options
  */
-export function emitDiagnosticsThroughRollup({languageService, languageServiceHost, context, pluginOptions}: IGetDiagnosticsOptions): void {
+export function emitDiagnosticsThroughRollup({languageService, languageServiceHost, context}: IGetDiagnosticsOptions): void {
 	const program = languageService.getProgram();
 	if (program == null) return;
 
 	let diagnostics: readonly Diagnostic[] | undefined = getPreEmitDiagnostics(program);
-
-	// If there is a hook for diagnostics, call it assign the result of calling it to the local variable 'diagnostics'
-	if (pluginOptions.hook.diagnostics != null) {
-		diagnostics = pluginOptions.hook.diagnostics(diagnostics);
-	}
 
 	// Don't proceed if the hook returned null or undefined
 	if (diagnostics == null) return;

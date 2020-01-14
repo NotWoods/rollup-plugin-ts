@@ -16,8 +16,7 @@ export function getPluginOptions(options: Partial<TypescriptPluginOptions>): Typ
 		exclude = [],
 		transpileOnly = false,
 		debug = false,
-		fileSystem = REAL_FILE_SYSTEM,
-		hook = {}
+		fileSystem = REAL_FILE_SYSTEM
 	} = options;
 
 	// These options will be used no matter what
@@ -29,7 +28,6 @@ export function getPluginOptions(options: Partial<TypescriptPluginOptions>): Typ
 		tsconfig,
 		transpileOnly,
 		debug,
-		fileSystem,
-		hook
+		fileSystem
 	};
 }
