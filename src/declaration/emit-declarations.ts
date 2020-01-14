@@ -36,7 +36,6 @@ export interface EmitDeclarationsOptions {
 	fileSystem: FileSystem;
 	pluginContext: PluginContext;
 	bundle: OutputBundle;
-	cwd: string;
 	compilerOptions: CompilerOptions;
 	languageServiceHost: IncrementalLanguageService;
 	pluginOptions: TypescriptPluginOptions;
@@ -50,10 +49,11 @@ export function emitDeclarations(options: EmitDeclarationsOptions) {
 	const chunkToPreBundleResult = new Map<string, SourceDescription>();
 	const chunks = Object.values(options.bundle).filter(isOutputChunk);
 
-	const relativeDeclarationOutDir = normalize(getDeclarationOutDir(options.cwd, options.compilerOptions, options.outputOptions));
-	const absoluteDeclarationOutDir = join(options.cwd, relativeDeclarationOutDir);
-	const relativeOutDir = getOutDir(options.cwd, options.outputOptions);
-	const absoluteOutDir = join(options.cwd, relativeOutDir);
+	const cwd = process.cwd();
+	const relativeDeclarationOutDir = normalize(getDeclarationOutDir(cwd, options.compilerOptions, options.outputOptions));
+	const absoluteDeclarationOutDir = join(cwd, relativeDeclarationOutDir);
+	const relativeOutDir = getOutDir(cwd, options.outputOptions);
+	const absoluteOutDir = join(cwd, relativeOutDir);
 	const generateMap = Boolean(options.compilerOptions.declarationMap);
 	const mergeChunksResult = mergeChunksWithAmbientDependencies(chunks, options.moduleDependencyMap);
 	const chunkToOriginalFileMap = getChunkToOriginalFileMap(absoluteOutDir, mergeChunksResult);

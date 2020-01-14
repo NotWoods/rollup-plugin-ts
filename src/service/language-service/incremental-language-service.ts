@@ -21,7 +21,6 @@ import {ensureAbsolute, isInternalFile} from "../../util/path/path-util";
 import {resolveId} from "../../util/resolve-id/resolve-id";
 import {FileSystem} from "../../util/file-system/file-system";
 import {EmitCache} from "../cache/emit-cache/emit-cache";
-import {TypescriptPluginOptions} from "../../plugin/i-typescript-plugin-options";
 import {ResolveCache} from "../cache/resolve-cache/resolve-cache";
 import {SupportedExtensions} from "../../util/get-supported-extensions/get-supported-extensions";
 
@@ -35,8 +34,6 @@ interface IFile {
 
 interface ILanguageServiceOptions {
 	parsedCommandLine: ParsedCommandLine;
-	cwd: TypescriptPluginOptions["cwd"];
-	resolveTypescriptLibFrom: TypescriptPluginOptions["resolveTypescriptLibFrom"];
 	emitCache: EmitCache;
 	resolveCache: ResolveCache;
 	rollupInputOptions: InputOptions;
@@ -51,13 +48,11 @@ interface ILanguageServiceOptions {
 export class IncrementalLanguageService implements LanguageServiceHost, CompilerHost {
 	/**
 	 * A Map between filenames and emitted code
-	 * @type {Map<string, string>}
 	 */
 	public emittedFiles: Map<string, string> = new Map();
 
 	/**
 	 * The Set of all files that has been added manually via the public API
-	 * @type {Set<string>}
 	 */
 	public publicFiles: Set<string> = new Set();
 
@@ -142,14 +137,11 @@ export class IncrementalLanguageService implements LanguageServiceHost, Compiler
 	 * Gets the current directory
 	 */
 	public getCurrentDirectory(): string {
-		return this.options.cwd;
+		return process.cwd();
 	}
 
 	/**
 	 * Reads the given file
-	 * @param {string} fileName
-	 * @param {string} [encoding]
-	 * @returns {string | undefined}
 	 */
 	public readFile(fileName: string, encoding?: string): string | undefined {
 		// Check if the file exists within the cached files and return it if so
@@ -165,7 +157,6 @@ export class IncrementalLanguageService implements LanguageServiceHost, Compiler
 		for (const moduleName of moduleNames) {
 			// try to use standard resolution
 			let result = resolveId({
-				cwd: this.options.cwd,
 				parent: containingFile,
 				id: moduleName,
 				moduleResolutionHost: this,
@@ -290,8 +281,9 @@ export class IncrementalLanguageService implements LanguageServiceHost, Compiler
 	 * Adds all default declaration files to the LanguageService
 	 */
 	private addDefaultFileNames(): void {
+		const cwd = process.cwd();
 		this.options.parsedCommandLine.fileNames.forEach(file => {
-			const code = this.options.fileSystem.readFile(ensureAbsolute(this.options.cwd, file));
+			const code = this.options.fileSystem.readFile(ensureAbsolute(cwd, file));
 			if (code != null) {
 				this.addFile(file, code, true);
 			}
@@ -302,8 +294,9 @@ export class IncrementalLanguageService implements LanguageServiceHost, Compiler
 	 * Asserts that the given file name exists within the LanguageServiceHost
 	 */
 	private assertHasFileName(fileName: string): IFile {
+		const cwd = process.cwd();
 		if (!this.files.has(fileName)) {
-			const absoluteFileName = DEFAULT_LIB_NAMES.has(fileName) ? fileName : ensureAbsolute(this.options.cwd, fileName);
+			const absoluteFileName = DEFAULT_LIB_NAMES.has(fileName) ? fileName : ensureAbsolute(cwd, fileName);
 
 			// If the file exists on disk, add it
 			const code = this.options.fileSystem.readFile(absoluteFileName);

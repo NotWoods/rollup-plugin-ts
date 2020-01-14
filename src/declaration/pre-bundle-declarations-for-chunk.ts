@@ -9,7 +9,6 @@ import {IncrementalLanguageService} from "../service/language-service/incrementa
 import {DeclarationPreBundlerOptions} from "../service/transformer/declaration-pre-bundler/declaration-pre-bundler-options";
 
 export interface PreBundleDeclarationsForChunkOptions extends Omit<DeclarationPreBundlerOptions, "typeChecker"> {
-	cwd: string;
 	generateMap: boolean;
 	languageServiceHost: IncrementalLanguageService;
 }
@@ -21,6 +20,7 @@ export function preBundleDeclarationsForChunk(options: PreBundleDeclarationsForC
 		host: options.languageServiceHost
 	});
 
+	const cwd = process.cwd();
 	const typeChecker = program.getTypeChecker();
 
 	const compilationSettings = options.languageServiceHost.getCompilationSettings();
@@ -33,7 +33,7 @@ export function preBundleDeclarationsForChunk(options: PreBundleDeclarationsForC
 		undefined,
 		(file, data) => {
 			const normalizedFile = normalize(file);
-			const replacedFile = normalize(normalizedFile.replace(generatedOutDir, "").replace(options.cwd, ""));
+			const replacedFile = normalize(normalizedFile.replace(generatedOutDir, "").replace(cwd, ""));
 			const replacedFileDir = normalize(dirname(replacedFile));
 
 			if (replacedFile.endsWith(DECLARATION_MAP_EXTENSION)) {
@@ -49,7 +49,7 @@ export function preBundleDeclarationsForChunk(options: PreBundleDeclarationsForC
 						// cwd. Because, of that, we first need to correct the source path so it is instead relative
 						// to cwd
 						const sourceFromCwd = posixSource.startsWith("../") ? posixSource.slice("../".length) : posixSource;
-						const absoluteSourceFromCwd = join(options.cwd, sourceFromCwd);
+						const absoluteSourceFromCwd = join(cwd, sourceFromCwd);
 						return relative(options.absoluteDeclarationMapDirname, absoluteSourceFromCwd);
 					})
 					// Include only those sources that are actually part of the chunk

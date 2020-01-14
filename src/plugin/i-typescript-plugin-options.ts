@@ -27,8 +27,6 @@ export interface InputCompilerOptions extends Omit<CompilerOptions, "module" | "
 
 export interface TypescriptPluginOptions {
 	tsconfig?: string | Partial<CompilerOptions> | Partial<InputCompilerOptions> | ParsedCommandLine | TsConfigResolver | TsConfigResolverWithFileName;
-	cwd: string;
-	resolveTypescriptLibFrom: string;
 	include: string[] | string;
 	exclude: string[] | string;
 	transpileOnly?: boolean;

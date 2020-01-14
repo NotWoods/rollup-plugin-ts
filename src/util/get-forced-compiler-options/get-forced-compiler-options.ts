@@ -29,7 +29,7 @@ function getForcedModuleKindOption({rollupOutputOptions}: IGetForcedCompilerOpti
 export function getForcedCompilerOptions(options: IGetForcedCompilerOptionsOptions): Partial<CompilerOptions> {
 	return {
 		module: getForcedModuleKindOption(options),
-		outDir: getOutDir(options.pluginOptions.cwd, options.rollupOutputOptions),
+		outDir: getOutDir(process.cwd(), options.rollupOutputOptions),
 		baseUrl: ".",
 		// Rollup, not Typescript, is the decider of where to put files
 		outFile: undefined,

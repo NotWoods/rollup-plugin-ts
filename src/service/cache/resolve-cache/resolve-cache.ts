@@ -19,7 +19,6 @@ export interface ExtendedResolvedModule extends Omit<ResolvedModuleFull, "resolv
 export interface IGetResolvedIdWithCachingOptions {
 	id: string;
 	parent: string;
-	cwd: string;
 	options: CompilerOptions;
 	supportedExtensions: SupportedExtensions;
 	moduleResolutionHost: ModuleResolutionHost | IncrementalLanguageService;
@@ -121,7 +120,7 @@ export class ResolveCache {
 	 * Gets a cached module result for the given file from the given parent and returns it if it exists already.
 	 * If not, it will compute it, update the cache, and then return it
 	 */
-	public get({id, parent, moduleResolutionHost, options, cwd, supportedExtensions}: IGetResolvedIdWithCachingOptions): ExtendedResolvedModule | null {
+	public get({id, parent, moduleResolutionHost, options, supportedExtensions}: IGetResolvedIdWithCachingOptions): ExtendedResolvedModule | null {
 		let cacheResult = this.getFromCache(id, parent);
 		if (cacheResult != null) {
 			return cacheResult;
@@ -140,7 +139,7 @@ export class ResolveCache {
 		// Otherwise, proceed
 		else {
 			// Make sure that the path is absolute from the cwd
-			resolvedModule.resolvedFileName = normalize(ensureAbsolute(cwd, resolvedModule.resolvedFileName!));
+			resolvedModule.resolvedFileName = normalize(ensureAbsolute(process.cwd(), resolvedModule.resolvedFileName!));
 
 			if (resolvedModule.resolvedFileName.endsWith(DECLARATION_EXTENSION)) {
 				resolvedModule.resolvedAmbientFileName = resolvedModule.resolvedFileName;

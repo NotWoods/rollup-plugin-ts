@@ -10,7 +10,6 @@ import {
 import {FileSystem} from "../file-system/file-system";
 
 interface IGetParsedCommandLineOptions {
-	cwd: string;
 	tsconfig?: TypescriptPluginOptions["tsconfig"];
 	forcedCompilerOptions?: CompilerOptions;
 	fileSystem: FileSystem;
@@ -77,12 +76,8 @@ function isCompilerOptions(tsconfig?: IGetParsedCommandLineOptions["tsconfig"]):
  * @param {IGetParsedCommandLineOptions} options
  * @returns {GetParsedCommandLineResult}
  */
-export function getParsedCommandLine({
-	cwd,
-	tsconfig,
-	fileSystem,
-	forcedCompilerOptions = {}
-}: IGetParsedCommandLineOptions): GetParsedCommandLineResult {
+export function getParsedCommandLine({tsconfig, fileSystem, forcedCompilerOptions = {}}: IGetParsedCommandLineOptions): GetParsedCommandLineResult {
+	const cwd = process.cwd();
 	const hasProvidedTsconfig = tsconfig != null;
 	let originalCompilerOptions: CompilerOptions | undefined;
 	let parsedCommandLine: ParsedCommandLine;

@@ -32,7 +32,7 @@ const PLUGIN_NAME = "Typescript";
  */
 export default function typescriptRollupPlugin(pluginInputOptions: Partial<TypescriptPluginOptions> = {}): Plugin {
 	const pluginOptions: TypescriptPluginOptions = getPluginOptions(pluginInputOptions);
-	const {include, exclude, tsconfig, cwd, resolveTypescriptLibFrom} = pluginOptions;
+	const {include, exclude, tsconfig} = pluginOptions;
 
 	/**
 	 * The ParsedCommandLine to use with Typescript
@@ -145,7 +145,6 @@ export default function typescriptRollupPlugin(pluginInputOptions: Partial<Types
 			// Make sure we have a proper ParsedCommandLine to work with
 			parsedCommandLineResult = getParsedCommandLine({
 				tsconfig,
-				cwd,
 				forcedCompilerOptions: getForcedCompilerOptions({pluginOptions, rollupInputOptions}),
 				fileSystem: pluginOptions.fileSystem
 			});
@@ -161,7 +160,6 @@ export default function typescriptRollupPlugin(pluginInputOptions: Partial<Types
 				resolveId({
 					id,
 					parent,
-					cwd,
 					options: parsedCommandLineResult.parsedCommandLine.options,
 					moduleResolutionHost,
 					resolveCache,
@@ -180,8 +178,6 @@ export default function typescriptRollupPlugin(pluginInputOptions: Partial<Types
 
 			// Hook up a LanguageServiceHost and a LanguageService
 			languageServiceHost = new IncrementalLanguageService({
-				cwd,
-				resolveTypescriptLibFrom,
 				emitCache,
 				resolveCache,
 				rollupInputOptions,
@@ -273,7 +269,7 @@ export default function typescriptRollupPlugin(pluginInputOptions: Partial<Types
 
 			// Handle tslib differently
 			if (isTslib(id)) {
-				const tslibPath = resolveCache.findHelperFromNodeModules("tslib/tslib.es6.js", cwd);
+				const tslibPath = resolveCache.findHelperFromNodeModules("tslib/tslib.es6.js", process.cwd());
 				if (tslibPath != null) {
 					return tslibPath;
 				}
@@ -305,7 +301,6 @@ export default function typescriptRollupPlugin(pluginInputOptions: Partial<Types
 					supportedExtensions: SUPPORTED_EXTENSIONS,
 					fileSystem: pluginOptions.fileSystem,
 					resolver: ambientResolver,
-					cwd,
 					outputOptions,
 					pluginOptions,
 					languageServiceHost,
