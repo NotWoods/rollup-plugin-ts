@@ -1,6 +1,5 @@
 import {
 	CompilerHost,
-	CompilerOptions,
 	getDefaultLibFileName,
 	IScriptSnapshot,
 	LanguageServiceHost,
@@ -10,9 +9,9 @@ import {
 	SourceFile,
 	getDefaultLibFilePath,
 	LanguageService,
-	ParsedCommandLine
+	ParsedCommandLine,
+	ModuleResolutionHost
 } from "typescript";
-import {InputOptions} from "rollup";
 import {join, dirname} from "path";
 import {getNewLineCharacter} from "../../util/get-new-line-character/get-new-line-character";
 import {getScriptKindFromPath} from "../../util/get-script-kind-from-path/get-script-kind-from-path";
@@ -36,7 +35,6 @@ interface ILanguageServiceOptions {
 	parsedCommandLine: ParsedCommandLine;
 	emitCache: EmitCache;
 	resolveCache: ResolveCache;
-	rollupInputOptions: InputOptions;
 	supportedExtensions: SupportedExtensions;
 	languageService(): LanguageService;
 	fileSystem: FileSystem;
@@ -45,7 +43,7 @@ interface ILanguageServiceOptions {
 /**
  * An implementation of a LanguageService for Typescript
  */
-export class IncrementalLanguageService implements LanguageServiceHost, CompilerHost {
+export class IncrementalLanguageService implements LanguageServiceHost, CompilerHost, ModuleResolutionHost {
 	/**
 	 * A Map between filenames and emitted code
 	 */
@@ -62,13 +60,39 @@ export class IncrementalLanguageService implements LanguageServiceHost, Compiler
 	private readonly files: Map<string, IFile> = new Map();
 
 	constructor(private readonly options: ILanguageServiceOptions) {
+		const sys = options.fileSystem;
 		this.addDefaultLibs();
 		this.addDefaultFileNames();
 
-		this.realpath = this.options.fileSystem.realpath;
-		this.readDirectory = this.options.fileSystem.readDirectory;
+		this.realpath = sys.realpath;
+		this.readDirectory = sys.readDirectory;
 		this.getDefaultLibFileName = getDefaultLibFileName;
+		this.getCurrentDirectory = () => process.cwd();
+		this.getNewLine = () => getNewLineCharacter(options.parsedCommandLine.options.newLine, sys);
+		this.useCaseSensitiveFileNames = () => sys.useCaseSensitiveFileNames;
+		this.getCompilationSettings = () => options.parsedCommandLine.options;
+		this.getDirectories = sys.getDirectories;
+		this.directoryExists = sys.directoryExists;
 	}
+
+	/** Gets the current working directory */
+	public getCurrentDirectory: LanguageServiceHost["getCurrentDirectory"];
+	/** Reads the given directory */
+	public readDirectory: LanguageServiceHost["readDirectory"];
+	/** Gets the real path for the given path. Meant to resolve symlinks */
+	public realpath: LanguageServiceHost["realpath"];
+	/** Gets the default lib file name based on the given CompilerOptions */
+	public getDefaultLibFileName: LanguageServiceHost["getDefaultLibFileName"];
+	/** Gets the newline to use */
+	public getNewLine: CompilerHost["getNewLine"];
+	/** Returns true if file names should be treated as case-sensitive */
+	public useCaseSensitiveFileNames: CompilerHost["useCaseSensitiveFileNames"];
+	/** Gets the CompilerOptions provided in the constructor */
+	public getCompilationSettings: LanguageServiceHost["getCompilationSettings"];
+	/** Gets all directories within the given directory path */
+	public getDirectories: LanguageServiceHost["getDirectories"];
+	/** Returns true if the given directory exists */
+	public directoryExists: LanguageServiceHost["directoryExists"];
 
 	/**
 	 * Writes a file. Will simply put it in the emittedFiles Map
@@ -134,16 +158,7 @@ export class IncrementalLanguageService implements LanguageServiceHost, Compiler
 		return this.options.fileSystem.fileExists(fileName);
 	}
 
-	/**
-	 * Gets the current directory
-	 */
-	public getCurrentDirectory(): string {
-		return process.cwd();
-	}
-
-	/**
-	 * Reads the given file
-	 */
+	/** Reads the given file */
 	public readFile(fileName: string, encoding?: string): string | undefined {
 		// Check if the file exists within the cached files and return it if so
 		const result = this.files.get(fileName);
@@ -177,44 +192,6 @@ export class IncrementalLanguageService implements LanguageServiceHost, Compiler
 	}
 
 	/**
-	 * Reads the given directory
-	 */
-	public readDirectory: FileSystem["readDirectory"];
-
-	/**
-	 * Gets the real path for the given path. Meant to resolve symlinks
-	 */
-	public realpath: FileSystem["realpath"];
-
-	/**
-	 * Gets the default lib file name based on the given CompilerOptions
-	 * @param {CompilerOptions} options
-	 * @returns {string}
-	 */
-	public getDefaultLibFileName: LanguageServiceHost["getDefaultLibFileName"];
-
-	/**
-	 * Gets the newline to use
-	 */
-	public getNewLine(): string {
-		return getNewLineCharacter(this.options.parsedCommandLine.options.newLine, this.options.fileSystem);
-	}
-
-	/**
-	 * Returns true if file names should be treated as case-sensitive
-	 */
-	public useCaseSensitiveFileNames(): boolean {
-		return this.options.fileSystem.useCaseSensitiveFileNames;
-	}
-
-	/**
-	 * Gets the CompilerOptions provided in the constructor
-	 */
-	public getCompilationSettings(): CompilerOptions {
-		return this.options.parsedCommandLine.options;
-	}
-
-	/**
 	 * Gets all Script file names
 	 */
 	public getScriptFileNames(): string[] {
@@ -232,8 +209,7 @@ export class IncrementalLanguageService implements LanguageServiceHost, Compiler
 	 * Gets a ScriptSnapshot for the given file
 	 */
 	public getScriptSnapshot(fileName: string): IScriptSnapshot | undefined {
-		const file = this.assertHasFileName(fileName);
-		return file.snapshot;
+		return this.assertHasFileName(fileName).snapshot;
 	}
 
 	/**
@@ -248,20 +224,6 @@ export class IncrementalLanguageService implements LanguageServiceHost, Compiler
 	 */
 	public getCanonicalFileName(fileName: string): string {
 		return this.useCaseSensitiveFileNames() ? fileName : fileName.toLowerCase();
-	}
-
-	/**
-	 * Gets all directories within the given directory path
-	 */
-	public getDirectories(directoryName: string): string[] {
-		return this.options.fileSystem.getDirectories(directoryName);
-	}
-
-	/**
-	 * Returns true if the given directory exists
-	 */
-	public directoryExists(directoryName: string): boolean {
-		return this.options.fileSystem.directoryExists(directoryName);
 	}
 
 	/**

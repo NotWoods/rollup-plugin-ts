@@ -38,6 +38,11 @@ export class ResolveCache {
 	}
 
 	/**
+	 * Resolves a module name, including internal helpers such as tslib, even if they aren't included in the language service
+	 */
+	public resolveModuleName: typeof resolveModuleName;
+
+	/**
 	 * Gets the resolved path for an id from a parent
 	 * @param {string} id
 	 * @param {string} parent
@@ -78,11 +83,6 @@ export class ResolveCache {
 		parentMap.set(id, result);
 		return result;
 	}
-
-	/**
-	 * Resolves a module name, including internal helpers such as tslib, even if they aren't included in the language service
-	 */
-	public resolveModuleName: typeof resolveModuleName;
 
 	/**
 	 * Finds the given helper inside node_modules (or at least attempts to)

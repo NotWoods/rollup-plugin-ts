@@ -1,12 +1,11 @@
 import {CompilerOptions, ModuleKind, ModuleResolutionKind} from "typescript";
-import {InputOptions, OutputOptions} from "rollup";
+import {OutputOptions} from "rollup";
 import {TypescriptPluginOptions} from "../../plugin/i-typescript-plugin-options";
 import {getModuleKindFromRollupFormat} from "../get-module-kind-from-rollup-format/get-module-kind-from-rollup-format";
 import {getOutDir} from "../get-out-dir/get-out-dir";
 
 interface IGetForcedCompilerOptionsOptions {
 	pluginOptions: TypescriptPluginOptions;
-	rollupInputOptions: InputOptions;
 	rollupOutputOptions?: OutputOptions;
 }
 

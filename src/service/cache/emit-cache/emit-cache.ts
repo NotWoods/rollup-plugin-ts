@@ -19,15 +19,15 @@ export class EmitCache {
 	 * Gets an EmitOutput from the emit cache
 	 */
 	public getFromCache(fileName: string, dtsOnly: boolean = false): EmitOutput | undefined {
-		return this.EMIT_CACHE.get(this.computeCacheKey(fileName, dtsOnly));
+		return this.EMIT_CACHE.get(EmitCache.computeCacheKey(fileName, dtsOnly));
 	}
 
 	/**
 	 * Deletes the entry matching the combination of fileName and whether or not only to emit declarations from the cache
 	 */
 	public delete(fileName: string): boolean {
-		const dtsCacheResult = this.EMIT_CACHE.delete(this.computeCacheKey(fileName, true));
-		const nonDtsCacheResult = this.EMIT_CACHE.delete(this.computeCacheKey(fileName, false));
+		const dtsCacheResult = this.EMIT_CACHE.delete(EmitCache.computeCacheKey(fileName, true));
+		const nonDtsCacheResult = this.EMIT_CACHE.delete(EmitCache.computeCacheKey(fileName, false));
 		return dtsCacheResult || nonDtsCacheResult;
 	}
 
@@ -35,7 +35,7 @@ export class EmitCache {
 	 * Sets the given EmitOutput in the emit cache
 	 */
 	public setInCache(emitOutput: EmitOutput, fileName: string, dtsOnly: boolean = false): EmitOutput {
-		this.EMIT_CACHE.set(this.computeCacheKey(fileName, dtsOnly), emitOutput);
+		this.EMIT_CACHE.set(EmitCache.computeCacheKey(fileName, dtsOnly), emitOutput);
 		return emitOutput;
 	}
 
@@ -58,7 +58,7 @@ export class EmitCache {
 	 * Computes a cache key from the given combination of a file name and whether or not only to emit
 	 * declaration files
 	 */
-	private computeCacheKey(fileName: string, dtsOnly: boolean = false): string {
+	private static computeCacheKey(fileName: string, dtsOnly: boolean): string {
 		return `${fileName}.${Number(dtsOnly)}`;
 	}
 }
