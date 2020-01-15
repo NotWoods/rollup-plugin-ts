@@ -39,6 +39,6 @@ export function getSourceDescriptionFromEmitOutput(output: EmitOutput): SourceDe
 
 	return {
 		code: code.text,
-		...(map == null ? {} : {map: map.text})
+		map: map?.text
 	};
 }
