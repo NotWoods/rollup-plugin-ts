@@ -8,7 +8,6 @@ import {EmitCache} from "../service/cache/emit-cache/emit-cache";
 import {emitDiagnosticsThroughRollup} from "../util/diagnostic/emit-diagnostics-through-rollup";
 import {getSupportedExtensions} from "../util/get-supported-extensions/get-supported-extensions";
 import {getExtension, isRollupPluginMultiEntry, isTslib} from "../util/path/path-util";
-import {takeBundledFilesNames} from "../util/take-bundled-filenames/take-bundled-filenames";
 import {TypescriptPluginOptions} from "./i-typescript-plugin-options";
 import {getPluginOptions} from "../util/plugin-options/get-plugin-options";
 import {ResolveCache} from "../service/cache/resolve-cache/resolve-cache";
@@ -71,10 +70,7 @@ export default function typescriptRollupPlugin(pluginInputOptions: Partial<Types
 	});
 
 	/** The LanguageService to use */
-	const languageService = createLanguageService(
-		languageServiceHost,
-		createDocumentRegistry(languageServiceHost.useCaseSensitiveFileNames(), languageServiceHost.getCurrentDirectory())
-	);
+	const languageService = createLanguageService(languageServiceHost);
 
 	const {resolver, ambientResolver} = buildResolvers({
 		options: parsedCommandLineResult.parsedCommandLine.options,
@@ -191,15 +187,6 @@ export default function typescriptRollupPlugin(pluginInputOptions: Partial<Types
 					canEmitForFile,
 					moduleDependencyMap
 				});
-			}
-
-			const bundledFilenames = takeBundledFilesNames(bundle);
-
-			// Walk through all of the files of the LanguageService and make sure to remove them if they are not part of the bundle
-			for (const fileName of languageServiceHost.publicFiles) {
-				if (!bundledFilenames.has(fileName)) {
-					languageServiceHost.deleteFile(fileName);
-				}
 			}
 		}
 	};

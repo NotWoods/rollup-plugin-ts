@@ -138,16 +138,6 @@ export class IncrementalLanguageService implements LanguageServiceHost, Compiler
 	}
 
 	/**
-	 * Deletes a file from the LanguageService
-	 */
-	public deleteFile(fileName: string): boolean {
-		const filesResult = this.files.delete(fileName);
-		const publicFilesResult = this.publicFiles.delete(fileName);
-		const cacheResult = this.options.emitCache.delete(fileName);
-		return filesResult || publicFilesResult || cacheResult;
-	}
-
-	/**
 	 * Returns true if the given file exists
 	 */
 	public fileExists(fileName: string): boolean {
@@ -169,8 +159,7 @@ export class IncrementalLanguageService implements LanguageServiceHost, Compiler
 	}
 
 	public resolveModuleNames(moduleNames: string[], containingFile: string): (ResolvedModuleFull | undefined)[] {
-		const resolvedModules: (ResolvedModuleFull | undefined)[] = [];
-		for (const moduleName of moduleNames) {
+		return moduleNames.map(moduleName => {
 			// try to use standard resolution
 			let result = resolveId({
 				parent: containingFile,
@@ -180,15 +169,14 @@ export class IncrementalLanguageService implements LanguageServiceHost, Compiler
 				resolveCache: this.options.resolveCache,
 				supportedExtensions: this.options.supportedExtensions
 			});
-			if (result != null && result.resolvedAmbientFileName != null) {
-				resolvedModules.push({...result, resolvedFileName: result.resolvedAmbientFileName});
-			} else if (result != null && result.resolvedFileName != null) {
-				resolvedModules.push({...result, resolvedFileName: result.resolvedFileName});
+			if (result?.resolvedAmbientFileName != null) {
+				return {...result, resolvedFileName: result.resolvedAmbientFileName};
+			} else if (result?.resolvedFileName != null) {
+				return {...result, resolvedFileName: result.resolvedFileName};
 			} else {
-				resolvedModules.push(undefined);
+				return undefined;
 			}
-		}
-		return resolvedModules;
+		});
 	}
 
 	/**

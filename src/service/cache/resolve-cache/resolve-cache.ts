@@ -33,14 +33,7 @@ export class ResolveCache {
 	 */
 	private readonly RESOLVE_CACHE: Map<string, Map<string, ExtendedResolvedModule | null>> = new Map();
 
-	constructor(private readonly options: ResolveCacheOptions) {
-		this.resolveModuleName = resolveModuleName;
-	}
-
-	/**
-	 * Resolves a module name, including internal helpers such as tslib, even if they aren't included in the language service
-	 */
-	public resolveModuleName: typeof resolveModuleName;
+	constructor(private readonly options: ResolveCacheOptions) {}
 
 	/**
 	 * Gets the resolved path for an id from a parent
@@ -126,7 +119,7 @@ export class ResolveCache {
 		}
 
 		// Resolve the file via Typescript, either through classic or node module resolution
-		const {resolvedModule} = this.resolveModuleName(id, parent, options, moduleResolutionHost) as {
+		const {resolvedModule} = resolveModuleName(id, parent, options, moduleResolutionHost) as {
 			resolvedModule: ExtendedResolvedModule | undefined;
 		};
 
