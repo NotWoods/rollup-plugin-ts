@@ -1,10 +1,9 @@
 import {OutputBundle, OutputOptions, Plugin, PluginContext, TransformSourceDescription} from "rollup";
-import {createDocumentRegistry, createLanguageService} from "typescript";
+import {createLanguageService} from "typescript";
 import {getParsedCommandLine} from "../util/get-parsed-command-line/get-parsed-command-line";
 import {getForcedCompilerOptions} from "../util/get-forced-compiler-options/get-forced-compiler-options";
 import {IncrementalLanguageService} from "../service/language-service/incremental-language-service";
 import {getSourceDescriptionFromEmitOutput} from "../util/get-source-description-from-emit-output/get-source-description-from-emit-output";
-import {EmitCache} from "../service/cache/emit-cache/emit-cache";
 import {emitDiagnosticsThroughRollup} from "../util/diagnostic/emit-diagnostics-through-rollup";
 import {getSupportedExtensions} from "../util/get-supported-extensions/get-supported-extensions";
 import {getExtension, isRollupPluginMultiEntry, isTslib} from "../util/path/path-util";
@@ -32,9 +31,6 @@ export default function typescriptRollupPlugin(pluginInputOptions: Partial<Types
 		fileSystem: pluginOptions.fileSystem
 	});
 
-	/** The EmitCache to use */
-	const emitCache = new EmitCache();
-
 	const moduleDependencyCache = new Map<string, Set<string>>();
 
 	/** The ResolveCache to use */
@@ -61,7 +57,6 @@ export default function typescriptRollupPlugin(pluginInputOptions: Partial<Types
 
 	/** The (Incremental) LanguageServiceHost to use */
 	const languageServiceHost = new IncrementalLanguageService({
-		emitCache,
 		resolveCache,
 		supportedExtensions,
 		fileSystem: pluginOptions.fileSystem,
@@ -128,7 +123,7 @@ export default function typescriptRollupPlugin(pluginInputOptions: Partial<Types
 				);
 
 				// Get some EmitOutput, optionally from the cache if the file contents are unchanged
-				const emitOutput = emitCache.get({fileName: file, languageService});
+				const emitOutput = languageService.getEmitOutput(file);
 
 				// Return the emit output results to Rollup
 				sourceDescription = getSourceDescriptionFromEmitOutput(emitOutput);

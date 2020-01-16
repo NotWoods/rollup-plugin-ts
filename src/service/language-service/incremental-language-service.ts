@@ -16,16 +16,13 @@ import {join, dirname} from "path";
 import {getNewLineCharacter} from "../../util/get-new-line-character/get-new-line-character";
 import {getScriptKindFromPath} from "../../util/get-script-kind-from-path/get-script-kind-from-path";
 import {DEFAULT_LIB_NAMES} from "../../constant/constant";
-import {ensureAbsolute, isInternalFile} from "../../util/path/path-util";
+import {ensureAbsolute} from "../../util/path/path-util";
 import {resolveId} from "../../util/resolve-id/resolve-id";
 import {FileSystem} from "../../util/file-system/file-system";
-import {EmitCache} from "../cache/emit-cache/emit-cache";
 import {ResolveCache} from "../cache/resolve-cache/resolve-cache";
 import {SupportedExtensions} from "../../util/get-supported-extensions/get-supported-extensions";
 
 interface IFile {
-	file: string;
-	code: string;
 	scriptKind: ScriptKind;
 	snapshot: IScriptSnapshot;
 	version: number;
@@ -33,7 +30,6 @@ interface IFile {
 
 interface ILanguageServiceOptions {
 	parsedCommandLine: ParsedCommandLine;
-	emitCache: EmitCache;
 	resolveCache: ResolveCache;
 	supportedExtensions: SupportedExtensions;
 	languageService(): LanguageService;
@@ -44,16 +40,6 @@ interface ILanguageServiceOptions {
  * An implementation of a LanguageService for Typescript
  */
 export class IncrementalLanguageService implements LanguageServiceHost, CompilerHost, ModuleResolutionHost {
-	/**
-	 * A Map between filenames and emitted code
-	 */
-	public emittedFiles: Map<string, string> = new Map();
-
-	/**
-	 * The Set of all files that has been added manually via the public API
-	 */
-	public publicFiles: Set<string> = new Set();
-
 	/**
 	 * A Map between file names and their IFiles
 	 */
@@ -97,9 +83,7 @@ export class IncrementalLanguageService implements LanguageServiceHost, Compiler
 	/**
 	 * Writes a file. Will simply put it in the emittedFiles Map
 	 */
-	public writeFile(fileName: string, data: string): void {
-		this.emittedFiles.set(fileName, data);
-	}
+	public writeFile(fileName: string, data: string): void {}
 
 	/**
 	 * Gets a SourceFile from the given fileName
@@ -114,27 +98,17 @@ export class IncrementalLanguageService implements LanguageServiceHost, Compiler
 	/**
 	 * Adds a File to the CompilerHost
 	 */
-	public addFile(file: string, code: string, internal: boolean = false): void {
+	public addFile(file: string, code: string): void {
 		const existing = this.files.get(file);
 
 		// Don't proceed if the file contents are completely unchanged
-		if (existing?.code === code) return;
+		if (existing != null && existing.snapshot.getText(0, existing.snapshot.getLength()) === code) return;
 
 		this.files.set(file, {
-			file,
-			code,
 			scriptKind: getScriptKindFromPath(file),
 			snapshot: ScriptSnapshot.fromString(code),
 			version: existing != null ? existing.version + 1 : 0
 		});
-
-		if (!internal) {
-			// Add the file to the Set of files that has been added manually by the user
-			this.publicFiles.add(file);
-		}
-
-		// Remove the file from the emit cache
-		this.options.emitCache.delete(file);
 	}
 
 	/**
@@ -152,7 +126,7 @@ export class IncrementalLanguageService implements LanguageServiceHost, Compiler
 	public readFile(fileName: string, encoding?: string): string | undefined {
 		// Check if the file exists within the cached files and return it if so
 		const result = this.files.get(fileName);
-		if (result != null) return result.code;
+		if (result != null) return result.snapshot.getText(0, result.snapshot.getLength());
 
 		// Otherwise, try to properly resolve the file
 		return this.options.fileSystem.readFile(fileName, encoding);
@@ -224,7 +198,7 @@ export class IncrementalLanguageService implements LanguageServiceHost, Compiler
 			const code = this.options.fileSystem.readFile(path);
 			if (code == null) return;
 
-			this.addFile(libName, code, true);
+			this.addFile(libName, code);
 		});
 	}
 
@@ -236,7 +210,7 @@ export class IncrementalLanguageService implements LanguageServiceHost, Compiler
 		this.options.parsedCommandLine.fileNames.forEach(file => {
 			const code = this.options.fileSystem.readFile(ensureAbsolute(cwd, file));
 			if (code != null) {
-				this.addFile(file, code, true);
+				this.addFile(file, code);
 			}
 		});
 	}
@@ -252,7 +226,7 @@ export class IncrementalLanguageService implements LanguageServiceHost, Compiler
 			// If the file exists on disk, add it
 			const code = this.options.fileSystem.readFile(absoluteFileName);
 			if (code != null) {
-				this.addFile(absoluteFileName, code, isInternalFile(absoluteFileName));
+				this.addFile(absoluteFileName, code);
 				return this.files.get(absoluteFileName)!;
 			} else {
 				throw new ReferenceError(`The given file: '${absoluteFileName}' doesn't exist!`);
