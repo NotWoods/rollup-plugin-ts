@@ -1,4 +1,4 @@
-import {CompilerOptions, ParsedCommandLine} from "typescript";
+import {CompilerOptions} from "typescript";
 import {FileSystem} from "../util/file-system/file-system";
 
 export interface TsConfigResolverWithFileName {
@@ -17,7 +17,7 @@ export interface InputCompilerOptions extends Omit<CompilerOptions, "module" | "
 }
 
 export interface TypescriptPluginOptions {
-	tsconfig?: string | Partial<CompilerOptions> | Partial<InputCompilerOptions> | ParsedCommandLine | TsConfigResolver | TsConfigResolverWithFileName;
+	tsconfig?: string | Partial<InputCompilerOptions> | false;
 	include: string[] | string;
 	exclude: string[] | string;
 	transpileOnly?: boolean;
