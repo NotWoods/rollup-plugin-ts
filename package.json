@@ -105,7 +105,7 @@
 	},
 	"ava": {
 		"files": [
-			"test/**.test.ts"
+			"test/**.test.js"
 		],
 		"verbose": true,
 		"failFast": true,
